@@ -1,0 +1,23 @@
+# Ikkhi Python Dependencies
+
+# Local Audio & Speech-to-Text
+faster-whisper>=1.0.0
+sounddevice>=0.4.6
+numpy>=1.24.0
+scipy>=1.11.0
+openwakeword>=0.6.0
+
+# Windows OS & UI Automation
+pywinauto>=0.6.8
+pyautogui>=0.9.54
+pynput>=1.7.6
+opencv-python>=4.8.0
+pillow>=10.0.0
+
+# Smart AI Tier (Google AI Studio - Gemini)
+google-genai>=0.1.1
+
+# Configuration & Data Validation
+pydantic>=2.5.0
+pyyaml>=6.0.1
+python-dotenv>=1.0.0

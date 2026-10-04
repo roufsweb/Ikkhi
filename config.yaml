@@ -1,0 +1,36 @@
+# Ikkhi System Configuration
+
+system:
+  name: "Ikkhi"
+  debug: true
+
+audio:
+  # Mode options: "both", "push_to_talk", "wake_word"
+  activation_mode: "both"
+  push_to_talk_key: "ctrl+alt+space"
+  wake_word: "hey ikkhi"
+  sample_rate: 16000
+  # STT: faster-whisper model ("tiny.en", "base.en", "small.en")
+  whisper_model: "base.en"
+  whisper_device: "cuda" # "cuda" (for NVIDIA RTX) or "cpu"
+  compute_type: "float16" # or "int8" for CPU
+
+ai_tier:
+  # Google AI Studio settings (strictly on-demand)
+  enable_cloud_fallback: true
+  model_name: "gemini-2.0-flash"
+  max_output_tokens: 350
+  temperature: 0.1
+
+screen_indexing:
+  # Credit & Token optimization
+  crop_active_window_only: true
+  max_image_dimension: 1024 # Resizes before sending to Gemini to minimize tokens
+  jpeg_quality: 80
+  cache_ttl_seconds: 5
+
+pointer:
+  # Visual cursor pointing behavior
+  smooth_move_duration: 0.4
+  highlight_circle_radius: 25
+  highlight_duration_seconds: 1.5

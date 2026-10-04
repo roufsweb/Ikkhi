@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ikkhi"
+version = "0.1.0"
+description = "A resource-efficient, voice-controlled Windows desktop assistant featuring hybrid UI automation and credit-optimized multimodal vision."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Ikkhi Engineering Team" }
+]
+keywords = [
+    "voice-control",
+    "desktop-automation",
+    "accessibility",
+    "speech-to-text",
+    "whisper",
+    "multimodal-ai",
+    "windows-automation",
+    "davinci-resolve"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Win32 (MS Windows)",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows :: Windows 11",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Adaptive Technologies",
+    "Topic :: Desktop Environment",
+]
+dependencies = [
+    "faster-whisper>=1.0.0",
+    "sounddevice>=0.4.6",
+    "numpy>=1.24.0",
+    "scipy>=1.11.0",
+    "openwakeword>=0.6.0",
+    "pywinauto>=0.6.8",
+    "pyautogui>=0.9.54",
+    "pynput>=1.7.6",
+    "opencv-python>=4.8.0",
+    "pillow>=10.0.0",
+    "google-genai>=0.1.1",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "pyyaml>=6.0.1",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "ruff>=0.1.0",
+    "mypy>=1.6.0",
+    "types-PyYAML>=6.0.12",
+]
+
+[project.scripts]
+ikkhi = "ikkhi.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
