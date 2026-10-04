@@ -40,7 +40,12 @@
 - [x] Implement Credit-Saving Screen Indexer in `src/ikkhi/vision/indexer.py`
 - [x] Implement DPI-Aware Visual Cursor Pointer in `src/ikkhi/vision/pointer.py`
 - [x] Implement token-conscious Gemini client in `src/ikkhi/ai/gemini.py`
-- [x] Implement unit test suite under `tests/unit/` (`test_config.py`, `test_router.py`)
+- [x] Implement Universal UI Inspector in `src/ikkhi/automation/inspector.py`
+- [x] Implement Adaptive Per-App Knowledge Profiles in `src/ikkhi/automation/profiles.py`
+- [x] Implement Universal Dynamic Execution Engine in `src/ikkhi/automation/universal.py`
+- [x] Integrate authenticated SOCKS5 proxy configuration for heavy model downloads
+- [x] Initialize Git repository on branch `main`
+- [x] Formulate and execute unit test suite under `tests/unit/` (8/8 tests passing)
 
 ### Phase 1: Environment & Hardware Validation 🟡
 - [x] Verify Python installation (Python 3.12.10 detected on Windows 11 AMD64)

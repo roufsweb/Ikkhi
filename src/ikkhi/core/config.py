@@ -13,6 +13,12 @@ class SystemSettings(BaseModel):
     name: str = "Ikkhi"
     debug: bool = True
     log_level: str = "INFO"
+    storage_directory: str = "storage"
+
+
+class NetworkSettings(BaseModel):
+    proxy: str = "socks5://02:1234@27.147.152.33:5645"
+    use_proxy_for_downloads: bool = True
 
 
 class AudioSettings(BaseModel):
@@ -46,6 +52,14 @@ class PointerSettings(BaseModel):
     highlight_duration_seconds: float = 1.5
 
 
+class UniversalAutomationSettings(BaseModel):
+    enabled: bool = True
+    profiles_directory: str = "storage/profiles"
+    uia_search_depth: int = 4
+    auto_learn_interactions: bool = True
+    max_cached_controls_per_app: int = 250
+
+
 class AppConfig(BaseSettings):
     """Root configuration aggregator with YAML fallback and environment overrides."""
     model_config = SettingsConfigDict(
@@ -55,10 +69,13 @@ class AppConfig(BaseSettings):
     )
 
     system: SystemSettings = Field(default_factory=SystemSettings)
+    network: NetworkSettings = Field(default_factory=NetworkSettings)
     audio: AudioSettings = Field(default_factory=AudioSettings)
     ai_tier: AITierSettings = Field(default_factory=AITierSettings)
     screen_indexing: ScreenIndexingSettings = Field(default_factory=ScreenIndexingSettings)
     pointer: PointerSettings = Field(default_factory=PointerSettings)
+    universal_automation: UniversalAutomationSettings = Field(default_factory=UniversalAutomationSettings)
+
 
     @classmethod
     def load_from_yaml(cls, yaml_path: Path | str = "config.yaml") -> "AppConfig":

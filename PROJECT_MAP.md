@@ -50,9 +50,12 @@ e:/rouf/software-project/Ikkhi/
 │       │   ├── __init__.py
 │       │   ├── indexer.py                  # Active window cropper and token compressor
 │       │   └── pointer.py                  # DPI-aware smooth cursor glide & visual pulse
-│       ├── automation/                     # Deterministic automation actions
+│       ├── automation/                     # Universal & deterministic automation
 │       │   ├── __init__.py
-│       │   ├── registry.py                 # Action decorator and argument validator
+│       │   ├── registry.py                 # Action catalog decorator and argument validator
+│       │   ├── inspector.py                # Universal Windows UIA inspector (any foreground window)
+│       │   ├── profiles.py                 # Persistent per-app learning profiles (JSON storage)
+│       │   ├── universal.py                # Universal dynamic execution engine
 │       │   ├── windows.py                  # Windows OS volume and window controls
 │       │   └── apps/
 │       │       ├── __init__.py
@@ -61,12 +64,16 @@ e:/rouf/software-project/Ikkhi/
 │           ├── __init__.py
 │           └── gemini.py                   # Token-conscious Google AI Studio client
 │
+├── storage/                                # [Runtime] Persistent application knowledge
+│   └── profiles/                           # Per-application JSON control maps & learned macros
+│
 ├── tests/                                  # Comprehensive test suite
 │   ├── __init__.py
 │   └── unit/
 │       ├── __init__.py
 │       ├── test_config.py                  # Configuration loader tests
-│       └── test_router.py                  # Intent classification & routing tests
+│       ├── test_router.py                  # Intent classification & routing tests
+│       └── test_universal.py               # Universal inspector & adaptive profile tests
 │
 └── scripts/                                # Maintenance & diagnostic routines
     └── validate_environment.py             # System & hardware validation routine

@@ -3,6 +3,12 @@
 system:
   name: "Ikkhi"
   debug: true
+  storage_directory: "storage"
+
+network:
+  # SOCKS5 proxy configuration for heavy model downloads (Whisper, openWakeWord, etc.)
+  proxy: "socks5://02:1234@27.147.152.33:5645"
+  use_proxy_for_downloads: true
 
 audio:
   # Mode options: "both", "push_to_talk", "wake_word"
@@ -31,6 +37,14 @@ screen_indexing:
 
 pointer:
   # Visual cursor pointing behavior
-  smooth_move_duration: 0.4
+  smooth_move_duration: 0.35
   highlight_circle_radius: 25
   highlight_duration_seconds: 1.5
+
+universal_automation:
+  # Dynamic per-app UI inspection and adaptive learning
+  enabled: true
+  profiles_directory: "storage/profiles"
+  uia_search_depth: 4
+  auto_learn_interactions: true
+  max_cached_controls_per_app: 250
