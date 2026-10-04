@@ -28,6 +28,7 @@
   - Integrated permanent learning loop: whenever Gemini locates an element on screen, it is memorized in the active application's profile, eliminating future credit expenditure for that query.
 - [x] Configured authenticated SOCKS5 proxy (`socks5://02:1234@27.147.152.33:5645`) within `config.yaml` and `AppConfig` for resilient model and asset downloads.
 - [x] Initialized Git repository on branch `main` and executed initial commits.
+- [x] Provisioned and published the public GitHub repository at [https://github.com/roufsweb/Ikkhi](https://github.com/roufsweb/Ikkhi) using host OAuth2 credentials.
 - [x] Automated unit test suite executed via `pytest`: **8 out of 8 tests passed successfully** in 1.45s.
 - [x] Enforced strict rules in [AGENTS.md](file:///e:/rouf/software-project/Ikkhi/AGENTS.md) to continually maintain `PROGRESS.md`, `PROJECT_MAP.md`, and `CONVERSATION_SUMMARY.md` after every batch of changes.
 - [x] Created [PROGRESS.md](file:///e:/rouf/software-project/Ikkhi/PROGRESS.md) with full project schedule, milestones, and task checklists.
