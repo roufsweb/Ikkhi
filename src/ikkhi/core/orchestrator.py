@@ -9,6 +9,7 @@ from ikkhi.automation.universal import UniversalAutomationEngine
 from ikkhi.vision.indexer import ScreenIndexer
 from ikkhi.vision.pointer import CursorPointer
 from ikkhi.ai.gemini import GeminiVisualClient
+from ikkhi.audio.tts import LocalSpeechEngine
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,7 @@ class IkkhiOrchestrator:
         self.cursor_pointer = CursorPointer(config.pointer)
         self.gemini_client = GeminiVisualClient(config.ai_tier)
         self.universal_engine = UniversalAutomationEngine(config.universal_automation, self.cursor_pointer)
+        self.speech_engine = LocalSpeechEngine(config.audio)
 
     def process_transcript(self, transcript: str) -> str:
         """Processes a transcribed user utterance through the dual-tier routing architecture."""
@@ -68,6 +70,9 @@ class IkkhiOrchestrator:
                         )
                         logger.info("Permanently memorized interaction for [%s]: %s", app_id, route.raw_query)
                 
+                # Speak the explanation locally (0 tokens, $0.00 cost)
+                if res.response_text:
+                    self.speech_engine.speak(res.response_text)
                 return res.response_text
             except Exception as exc:
                 logger.error("Visual processing failed: %s", exc)

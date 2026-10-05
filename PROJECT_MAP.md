@@ -23,6 +23,9 @@ e:/rouf/software-project/Ikkhi/
 ├── PROJECT_GOALS.md                        # Vision, architecture pillars, and roadmap
 ├── PROJECT_MAP.md                          # (This file) Complete codebase & module map
 │
+├── docs/                                   # Research and deconstruction artifacts
+│   └── CLICKY_ANALYSIS.md                  # In-depth architectural deconstruction of HeyClicky
+│
 ├── pyproject.toml                          # PEP 621 compliant package build & metadata
 ├── requirements.txt                        # Core Python runtime dependencies
 ├── config.yaml                             # Central configuration (audio, AI tiers, pointer)
@@ -41,13 +44,15 @@ e:/rouf/software-project/Ikkhi/
 │       │   ├── config.py                   # Pydantic Settings configuration loader
 │       │   ├── router.py                   # High-throughput Tier 0 vs Tier 1 intent router
 │       │   └── orchestrator.py             # Event loop coordinator
-│       ├── audio/                          # Audio capture, VAD, and local STT
+│       ├── audio/                          # Audio capture, VAD, local STT and TTS
 │       │   ├── __init__.py
 │       │   ├── hotkey.py                   # Global push-to-talk listener (pynput)
 │       │   ├── capture.py                  # Ring-buffer audio recorder (sounddevice)
-│       │   └── stt.py                      # Local faster-whisper CUDA transcription engine
-│       ├── vision/                         # Visual indexing and cursor guidance
+│       │   ├── stt.py                      # Local faster-whisper CUDA transcription engine
+│       │   └── tts.py                      # 100% offline, zero-token local speech synthesis
+│       ├── vision/                         # Visual indexing, multi-monitor, and cursor guidance
 │       │   ├── __init__.py
+│       │   ├── monitors.py                 # Multi-monitor topology & DPI normalizer
 │       │   ├── indexer.py                  # Active window cropper and token compressor
 │       │   └── pointer.py                  # DPI-aware smooth cursor glide & visual pulse
 │       ├── automation/                     # Universal & deterministic automation

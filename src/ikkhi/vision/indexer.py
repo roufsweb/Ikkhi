@@ -10,6 +10,7 @@ from typing import Tuple, Optional
 from PIL import Image, ImageGrab
 from ikkhi.core.config import ScreenIndexingSettings
 from ikkhi.core.exceptions import ScreenCaptureError
+from ikkhi.vision.monitors import MultiMonitorManager
 
 
 @dataclass
@@ -20,6 +21,7 @@ class IndexedScreen:
     scaled_dimensions: Tuple[int, int]              # (width, height)
     scale_factor_x: float
     scale_factor_y: float
+    monitor_index: int = 0
 
     def map_to_screen_coordinates(self, norm_x: float, norm_y: float) -> Tuple[int, int]:
         """Convert normalized (0.0-1.0) coordinates within the crop back to absolute desktop pixels."""
@@ -32,25 +34,28 @@ class IndexedScreen:
 
 
 class ScreenIndexer:
-    """Extracts credit-optimized visual snapshots of active applications."""
+    """Extracts credit-optimized visual snapshots of active applications across multi-display topologies."""
 
     def __init__(self, settings: ScreenIndexingSettings) -> None:
         self.settings = settings
+        self.monitor_mgr = MultiMonitorManager()
 
     def capture_active_window(self) -> IndexedScreen:
         """Captures only the active window and compresses it to minimize multimodal API tokens."""
         try:
             hwnd = ctypes.windll.user32.GetForegroundWindow()
+            active_monitor = self.monitor_mgr.get_cursor_monitor()
+            
             if not hwnd or not self.settings.crop_active_window_only:
-                # Fallback to full screen if no active window
-                box = None
+                # Fallback to current monitor bounding box rather than whole virtual multi-monitor canvas
+                box = (active_monitor.left, active_monitor.top, active_monitor.right, active_monitor.bottom)
             else:
                 rect = ctypes.wintypes.RECT()
                 ctypes.windll.user32.GetWindowRect(hwnd, ctypes.byref(rect))
                 box = (rect.left, rect.top, rect.right, rect.bottom)
-                # If window is minimized or has zero size, capture full screen
+                # If window is minimized or has zero size, capture current monitor bounds
                 if box[2] <= box[0] or box[3] <= box[1]:
-                    box = None
+                    box = (active_monitor.left, active_monitor.top, active_monitor.right, active_monitor.bottom)
 
             raw_image = ImageGrab.grab(bbox=box, all_screens=False)
             orig_w, orig_h = raw_image.size

@@ -29,7 +29,15 @@
 - [x] Configured authenticated SOCKS5 proxy (`socks5://02:1234@27.147.152.33:5645`) within `config.yaml` and `AppConfig` for resilient model and asset downloads.
 - [x] Initialized Git repository on branch `main` and executed initial commits.
 - [x] Provisioned and published the public GitHub repository at [https://github.com/roufsweb/Ikkhi](https://github.com/roufsweb/Ikkhi) using host OAuth2 credentials.
-- [x] Automated unit test suite executed via `pytest`: **8 out of 8 tests passed successfully** in 1.45s.
+- [x] Conducted exhaustive research into **HeyClicky** (formerly Farza's viral open-source Clicky) and formalized findings in [docs/CLICKY_ANALYSIS.md](file:///e:/rouf/software-project/Ikkhi/docs/CLICKY_ANALYSIS.md):
+  - Deconstructed Clicky's pipeline: ScreenCaptureKit $\rightarrow$ AssemblyAI $\rightarrow$ Claude 3.5 Sonnet $\rightarrow$ ElevenLabs.
+  - Identified major vulnerabilities: Exorbitant token/monetary costs, high latency (3–5s), privacy risk, lack of UIA OS handles, and macOS lock-in.
+  - Formulated the "Anti-Clicky Architecture": Local GPU Whisper (STT) + Local SAPI/Piper (TTS) + Tier 0 Regex/UIA cache + On-demand Gemini Flash = **over 95% token/credit reduction**.
+- [x] Implemented Multi-Monitor Topology & Coordinate Normalizer (`src/ikkhi/vision/monitors.py`):
+  - Enumerates physical and virtual displays, isolates cursor monitor, and prevents coordinate distortion across arbitrary multi-screen arrays.
+- [x] Implemented 100% Offline Local Speech Synthesis (`src/ikkhi/audio/tts.py`):
+  - Zero-token, asynchronous local voice feedback engine using Windows native SAPI with neural Piper ONNX support.
+- [x] Automated unit test suite executed via `pytest`: **11 out of 11 tests passed successfully** in 0.55s.
 - [x] Enforced strict rules in [AGENTS.md](file:///e:/rouf/software-project/Ikkhi/AGENTS.md) to continually maintain `PROGRESS.md`, `PROJECT_MAP.md`, and `CONVERSATION_SUMMARY.md` after every batch of changes.
 - [x] Created [PROGRESS.md](file:///e:/rouf/software-project/Ikkhi/PROGRESS.md) with full project schedule, milestones, and task checklists.
 - [x] Created [PROJECT_MAP.md](file:///e:/rouf/software-project/Ikkhi/PROJECT_MAP.md) detailing the codebase hierarchy, module flow, and component responsibilities.
