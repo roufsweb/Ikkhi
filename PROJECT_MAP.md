@@ -18,6 +18,7 @@ e:/rouf/software-project/Ikkhi/
 │
 ├── AGENTS.md                               # System directives, agent persona, and rules
 ├── BOUNDARIES.md                           # Hard safety boundaries, privacy, and token cost rules
+├── CONTEXT.md                              # Ultra-compact AI agent handoff snapshot (<100 lines)
 ├── CONVERSATION_SUMMARY.md                 # Living log of conversation decisions & requirements
 ├── EXISTING_SOLUTIONS.md                   # Comparative analysis of Talon, Microsoft UFO, etc.
 ├── IMPLEMENTATION_PLAN.md                  # Detailed phase-by-phase implementation plan
@@ -27,7 +28,8 @@ e:/rouf/software-project/Ikkhi/
 │
 ├── docs/                                   # Research, deconstruction & planning artifacts
 │   ├── CLICKY_ANALYSIS.md                  # In-depth architectural deconstruction of HeyClicky
-│   └── GUI_AND_PACKAGING_PLAN.md           # Standalone GUI & single-file executable master plan
+│   ├── GUI_AND_PACKAGING_PLAN.md           # Standalone GUI & single-file executable master plan
+│   └── COMPACT_CONTEXT_PLAN.md             # Implementation plan for compact agent context engine
 │
 ├── pyproject.toml                          # PEP 621 compliant package build & metadata
 ├── requirements.txt                        # Core Python runtime dependencies
@@ -85,12 +87,13 @@ e:/rouf/software-project/Ikkhi/
 ├── storage/                                # [Runtime] Persistent application knowledge
 │   └── profiles/                           # Per-application JSON control maps & learned macros
 │
-├── tests/                                  # Comprehensive test suite (30 automated tests)
+├── tests/                                  # Comprehensive test suite (32 automated tests)
 │   ├── __init__.py
 │   ├── unit/                               # Isolated unit tests
 │   │   ├── __init__.py
 │   │   ├── test_audio.py                   # Audio buffer and hotkey tests
 │   │   ├── test_config.py                  # Configuration loader tests
+│   │   ├── test_context.py                 # Compact context snapshot boundedness & coverage
 │   │   ├── test_monitors.py                # Multi-monitor enumeration tests
 │   │   ├── test_router.py                  # Intent classification & routing tests
 │   │   ├── test_security.py                # Defensive hardening & path traversal tests

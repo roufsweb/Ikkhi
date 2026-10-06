@@ -22,6 +22,7 @@ You are acting as an **Expert Python Automation Engineer & Local AI Integrator**
    - Never run continuous whisper transcription in the background.
 
 5. **Living Conversation & Documentation Tracking (Mandatory Rule):**
+   - **Ultra-Compact Context Snapshot:** Always maintain and update `CONTEXT.md` (<100 lines, <700 tokens) to ensure any new chat session or external AI agent/model can immediately ingest the active state, golden rules, and command workflows in under 30 seconds without context bloat.
    - **Continuous Summary:** Always maintain and update `CONVERSATION_SUMMARY.md` whenever key decisions, architectural shifts, or milestones are reached.
    - **Project Progress Synchronization:** Always update `PROGRESS.md` after any batch of code changes or milestone progression. Check off completed items and record timestamps.
    - **Project Map Maintenance:** Always update `PROJECT_MAP.md` whenever new files, directories, or core modules are added, modified, or retired. Keep the architecture and component dependency graph accurate.
