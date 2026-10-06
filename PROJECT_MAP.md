@@ -48,8 +48,8 @@ e:/rouf/software-project/Ikkhi/
 │       │   └── orchestrator.py             # Event loop coordinator
 │       ├── audio/                          # Audio capture, VAD, local STT and TTS
 │       │   ├── __init__.py
-│       │   ├── hotkey.py                   # Global push-to-talk listener (pynput)
-│       │   ├── capture.py                  # Ring-buffer audio recorder (sounddevice)
+│       │   ├── capture.py                  # Zero-copy 16kHz audio buffer capture engine (sounddevice)
+│       │   ├── hotkey.py                   # Global asynchronous push-to-talk listener (pynput)
 │       │   ├── stt.py                      # Local faster-whisper CUDA transcription engine
 │       │   └── tts.py                      # 100% offline, zero-token local speech synthesis
 │       ├── vision/                         # Visual indexing, multi-monitor, and cursor guidance
@@ -74,10 +74,11 @@ e:/rouf/software-project/Ikkhi/
 ├── storage/                                # [Runtime] Persistent application knowledge
 │   └── profiles/                           # Per-application JSON control maps & learned macros
 │
-├── tests/                                  # Comprehensive test suite (22 automated tests)
+├── tests/                                  # Comprehensive test suite (24 automated tests)
 │   ├── __init__.py
 │   ├── unit/                               # Isolated unit tests
 │   │   ├── __init__.py
+│   │   ├── test_audio.py                   # Audio buffer and hotkey tests
 │   │   ├── test_config.py                  # Configuration loader tests
 │   │   ├── test_monitors.py                # Multi-monitor enumeration tests
 │   │   ├── test_router.py                  # Intent classification & routing tests
@@ -89,7 +90,8 @@ e:/rouf/software-project/Ikkhi/
 │       └── test_full_system.py             # 8-stage comprehensive subsystem verification
 │
 └── scripts/                                # Maintenance & diagnostic routines
-    └── validate_environment.py             # System & hardware validation routine
+    ├── validate_environment.py             # System & hardware validation routine
+    └── test_live_voice.py                  # Interactive microphone & voice verification tool
 ```
 
 ---
