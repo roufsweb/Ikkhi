@@ -45,7 +45,7 @@ def test_path_resolution_mechanisms():
 
 def test_theme_stylesheet_contains_tokens():
     """Ensure essential dark theme QSS tokens are defined."""
-    assert "background-color: #0b0f17;" in DARK_THEME_QSS
+    assert "background-color: #07090e;" in DARK_THEME_QSS
     assert "#00e5ff" in DARK_THEME_QSS
     assert "hudContainer" in DARK_THEME_QSS
 

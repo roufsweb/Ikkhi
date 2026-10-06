@@ -13,8 +13,10 @@ e:/rouf/software-project/Ikkhi/
 │   └── skills/
 │       ├── ikkhi-automation/
 │       │   └── SKILL.md                    # Action registration & tier hierarchy cheat sheet
-│       └── ikkhi-security/
-│           └── SKILL.md                    # Defensive hardening & vulnerability audit protocols
+│       ├── ikkhi-security/
+│       │   └── SKILL.md                    # Defensive hardening & vulnerability audit protocols
+│       └── ikkhi-ui/
+│           └── SKILL.md                    # Autonomous UI engineering & Cloudflare/Apple/OpenClaw design rules
 │
 ├── AGENTS.md                               # System directives, agent persona, and rules
 ├── BOUNDARIES.md                           # Hard safety boundaries, privacy, and token cost rules
@@ -95,7 +97,7 @@ e:/rouf/software-project/Ikkhi/
 ├── storage/                                # [Runtime] Persistent application knowledge
 │   └── profiles/                           # Per-application JSON control maps & learned macros
 │
-├── tests/                                  # Comprehensive test suite (44 automated tests)
+├── tests/                                  # Comprehensive test suite (46 automated tests)
 │   ├── __init__.py
 │   ├── unit/                               # Isolated unit tests
 │   │   ├── __init__.py

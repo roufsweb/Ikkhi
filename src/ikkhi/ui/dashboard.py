@@ -26,20 +26,20 @@ class MetricCard(QFrame):
         self.setProperty("class", "glassCard")
         self.setObjectName("glassCard")
         self.setStyleSheet(
-            "QFrame#glassCard { background-color: rgba(18, 24, 38, 0.88); "
+            "QFrame#glassCard { background-color: #0d121d; "
             "border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; }"
-            "QFrame#glassCard:hover { border: 1px solid rgba(0, 229, 255, 0.4); }"
+            "QFrame#glassCard:hover { border: 1px solid rgba(0, 229, 255, 0.35); background-color: #101624; }"
         )
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 14, 16, 14)
+        layout.setContentsMargins(18, 16, 18, 16)
         layout.setSpacing(4)
 
         self.label_title = QLabel(title.upper(), self)
-        self.label_title.setStyleSheet("color: #94a3b8; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;")
+        self.label_title.setStyleSheet("color: #64748b; font-size: 11px; font-weight: 700; letter-spacing: 0.8px;")
 
         self.label_val = QLabel(initial_value, self)
-        self.label_val.setStyleSheet("color: #00e5ff; font-size: 24px; font-weight: 800;")
+        self.label_val.setStyleSheet("color: #00e5ff; font-family: 'JetBrains Mono', 'Segoe UI Variable', monospace; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;")
 
         layout.addWidget(self.label_title)
         layout.addWidget(self.label_val)

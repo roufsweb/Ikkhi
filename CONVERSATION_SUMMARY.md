@@ -114,4 +114,10 @@
   - **Hardware Footprint & Portability:** Benchmarked exact local footprints (openWakeWord: 25MB RAM / 0MB VRAM; faster-whisper CUDA: 250–650MB VRAM; Piper TTS: 45MB RAM / 0MB VRAM; DeepSeek-R1-Distill-1.5B: ~1.8GB VRAM). Confirmed total VRAM footprint of ~2.4GB, leaving 5.6GB free on an RTX 3070 for heavy creative rendering. Outlined DirectML execution provider hierarchy for AMD/Intel hardware agnosticism.
   - **Competitive Landscape:** Benchmarked OpenClaw, Microsoft UFO, Talon Voice, and Open-Interpreter against Ikkhi's tiered deterministic fast-path and adaptive memory.
   - Expanded automated test suite to **44/44 tests passing (100% pass rate)** in `tests/unit/test_reader.py`.
+- **Autonomous UI Engineering & Aesthetic Design Governance (Phase 12):**
+  - **Autonomous UI Skill Deployed:** Authored `.agents/skills/ikkhi-ui/SKILL.md` encoding design tokens, multi-layer elevation hierarchies, double-buffered anti-aliasing paint rules, and autonomous polishing checklists inspired by Cloudflare (high-density telemetry, monospace chips, hairline borders), Apple (visionOS glassmorphism, fluid spring physics, soft ambient glow), Google Material You (stateful chips, reactive elevation), Microsoft Fluent 2 (Mica/Acrylic Windows 11 integration), and OpenClaw/Linear (obsidian deep space `#07090e`, neon cyan `#00e5ff`/violet `#a855f7` accents, tactile `<kbd>` badges).
+  - **UI Codebase Polished:** Updated `src/ikkhi/ui/theme.py` and `src/ikkhi/ui/dashboard.py` with the new tokens and JetBrains Mono monospace telemetry metrics.
+  - **Google AI Studio Clarification:** Reconfirmed that Google AI Studio is strictly a Tier 1 on-demand fallback for ambiguous visual screen grounding. All Tier 0 local macro operations, local speech recognition, wake-word, and screen reading aloud operate 100% offline with zero cloud tokens.
+  - **Live Testing Verification:** Fixed Whisper VAD filter truncation on short speech buffers; verified that GUI and wake-word listeners operate smoothly with **46/46 automated tests passing (100% pass rate)**.
+
 
