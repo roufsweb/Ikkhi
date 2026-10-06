@@ -58,17 +58,43 @@ class LocalSpeechEngine:
                 logger.error("Error in speech worker: %s", exc)
 
     def _synthesize(self, text: str) -> None:
-        """Synthesizes text locally using Windows native SAPI / COM interface."""
+        """Synthesizes text locally using native Windows COM / SAPI without shell execution."""
+        clean_text = text.strip()
+        if not clean_text:
+            return
+
+        # Tier A: Direct in-process Win32 SAPI via COM (0 subprocesses, fastest & safest)
         try:
             import win32com.client
             speaker = win32com.client.Dispatch("SAPI.SpVoice")
-            speaker.Speak(text)
+            speaker.Speak(clean_text)
+            return
         except Exception:
-            # Fallback to PowerShell System.Speech if pywin32 is not initialized
+            pass
+
+        # Tier B: Direct ctypes / comtypes SAPI call
+        try:
+            import comtypes.client
+            speaker = comtypes.client.CreateObject("SAPI.SpVoice")
+            speaker.Speak(clean_text)
+            return
+        except Exception:
+            pass
+
+        # Tier C: Hardened parameterized PowerShell without shell string interpolation (stdin)
+        try:
             import subprocess
-            clean_safe = text.replace('"', '""').replace("'", "''")
-            cmd = f'Add-Type -AssemblyName System.Speech; $s = New-Object System.Speech.Synthesis.SpeechSynthesizer; $s.Speak("{clean_safe}")'
-            subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", cmd], capture_output=True)
+            # Script reads directly from standard input to eliminate command injection
+            script = [
+                "powershell",
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                "$input_text = [Console]::In.ReadToEnd(); Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak($input_text)"
+            ]
+            subprocess.run(script, input=clean_text, text=True, capture_output=True, timeout=10)
+        except Exception as exc:
+            logger.error("Failed to synthesize speech via secure fallback: %s", exc)
 
     def stop(self) -> None:
         self._running = False

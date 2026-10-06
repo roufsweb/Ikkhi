@@ -11,8 +11,10 @@ e:/rouf/software-project/Ikkhi/
 │
 ├── .agents/                                # Agent skills & workflow customizations
 │   └── skills/
-│       └── ikkhi-automation/
-│           └── SKILL.md                    # Action registration & tier hierarchy cheat sheet
+│       ├── ikkhi-automation/
+│       │   └── SKILL.md                    # Action registration & tier hierarchy cheat sheet
+│       └── ikkhi-security/
+│           └── SKILL.md                    # Defensive hardening & vulnerability audit protocols
 │
 ├── AGENTS.md                               # System directives, agent persona, and rules
 ├── BOUNDARIES.md                           # Hard safety boundaries, privacy, and token cost rules
@@ -72,13 +74,14 @@ e:/rouf/software-project/Ikkhi/
 ├── storage/                                # [Runtime] Persistent application knowledge
 │   └── profiles/                           # Per-application JSON control maps & learned macros
 │
-├── tests/                                  # Comprehensive test suite (19 automated tests)
+├── tests/                                  # Comprehensive test suite (22 automated tests)
 │   ├── __init__.py
 │   ├── unit/                               # Isolated unit tests
 │   │   ├── __init__.py
 │   │   ├── test_config.py                  # Configuration loader tests
 │   │   ├── test_monitors.py                # Multi-monitor enumeration tests
 │   │   ├── test_router.py                  # Intent classification & routing tests
+│   │   ├── test_security.py                # Defensive hardening & path traversal tests
 │   │   ├── test_speech.py                  # Speech synthesis lifecycle tests
 │   │   └── test_universal.py               # Universal inspector & adaptive profile tests
 │   └── integration/                        # Master end-to-end integration tests

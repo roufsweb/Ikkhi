@@ -3,11 +3,18 @@ Adaptive Application Profile Management Subsystem.
 Persists per-app knowledge, UI control maps, and user-learned interactions.
 """
 
+import re
 import json
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Dict, Optional, List, Tuple
 from pydantic import BaseModel, Field
+from ikkhi.core.exceptions import IkkhiError
+
+
+class SecurityValidationError(IkkhiError):
+    """Raised when an untrusted input fails strict security validation."""
+    pass
 
 
 class IndexedControl(BaseModel):
@@ -43,17 +50,27 @@ class ProfileManager:
     """Manages persistent JSON profiles for individual applications used by the user."""
 
     def __init__(self, profiles_dir: str | Path = "storage/profiles") -> None:
-        self.profiles_dir = Path(profiles_dir)
+        self.profiles_dir = Path(profiles_dir).resolve()
         self.profiles_dir.mkdir(parents=True, exist_ok=True)
         self._cache: Dict[str, AppProfile] = {}
 
+    def _sanitize_path(self, app_identifier: str) -> Tuple[str, Path]:
+        """Sanitizes application identifiers to prevent directory traversal attacks."""
+        clean_name = re.sub(r"[^a-zA-Z0-9_\-]", "_", app_identifier.lower().replace(".exe", ""))
+        clean_name = clean_name.strip("_") or "unknown_app"
+        file_path = (self.profiles_dir / f"{clean_name}.json").resolve()
+        
+        # Enforce path containment within profiles_dir
+        if not file_path.is_relative_to(self.profiles_dir):
+            raise SecurityValidationError(f"Path traversal attempt detected: '{app_identifier}'")
+        return clean_name, file_path
+
     def get_or_create_profile(self, app_identifier: str, process_name: Optional[str] = None) -> AppProfile:
         """Retrieve existing profile from memory/disk or create a new one."""
-        app_id_clean = app_identifier.lower().replace(" ", "_").replace(".exe", "")
+        app_id_clean, file_path = self._sanitize_path(app_identifier)
         if app_id_clean in self._cache:
             return self._cache[app_id_clean]
 
-        file_path = self.profiles_dir / f"{app_id_clean}.json"
         if file_path.is_file():
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
@@ -74,11 +91,12 @@ class ProfileManager:
         return profile
 
     def save_profile(self, profile: AppProfile) -> None:
-        """Persist profile state to disk asynchronously or synchronously."""
+        """Persist profile state to disk safely."""
+        _, file_path = self._sanitize_path(profile.app_identifier)
         profile.last_updated = datetime.now(timezone.utc).isoformat()
-        file_path = self.profiles_dir / f"{profile.app_identifier}.json"
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(profile.model_dump(), f, indent=2)
+
 
     def record_interaction(
         self,
