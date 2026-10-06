@@ -29,6 +29,7 @@ e:/rouf/software-project/Ikkhi/
 ├── docs/                                   # Research, deconstruction & planning artifacts
 │   ├── CLICKY_ANALYSIS.md                  # In-depth architectural deconstruction of HeyClicky
 │   ├── COMPARISON_OPENCLAW.md              # In-depth architectural comparison: Ikkhi vs OpenClaw
+│   ├── DEEPSEEK_AND_AGENT_INNOVATIONS.md   # DeepSeek MLA, MoE, Code-as-Action & agent ecosystem analysis
 │   ├── GUI_AND_PACKAGING_PLAN.md           # Standalone GUI & single-file executable master plan
 │   ├── COMPACT_CONTEXT_PLAN.md             # Implementation plan for compact agent context engine
 │   └── CREATIVE_APPS_AND_EXPERIENCE_PLAN.md# Universal creative apps & experiential mistake learning
@@ -68,6 +69,7 @@ e:/rouf/software-project/Ikkhi/
 │       │   ├── __init__.py
 │       │   ├── registry.py                 # Action catalog decorator and argument validator
 │       │   ├── inspector.py                # Universal Windows UIA inspector (any foreground window)
+│       │   ├── reader.py                   # Screen Text-to-Speech & clipboard accessibility reader
 │       │   ├── profiles.py                 # Persistent per-app learning profiles (JSON storage)
 │       │   ├── experience.py               # Bayesian experiential memory & mistake learning engine
 │       │   ├── universal.py                # Universal dynamic execution engine
@@ -93,7 +95,7 @@ e:/rouf/software-project/Ikkhi/
 ├── storage/                                # [Runtime] Persistent application knowledge
 │   └── profiles/                           # Per-application JSON control maps & learned macros
 │
-├── tests/                                  # Comprehensive test suite (39 automated tests)
+├── tests/                                  # Comprehensive test suite (44 automated tests)
 │   ├── __init__.py
 │   ├── unit/                               # Isolated unit tests
 │   │   ├── __init__.py
@@ -103,6 +105,7 @@ e:/rouf/software-project/Ikkhi/
 │   │   ├── test_creative.py                # Universal creative app catalog & shortcut resolution
 │   │   ├── test_experience.py              # Bayesian experiential memory & mistake learning tests
 │   │   ├── test_monitors.py                # Multi-monitor enumeration tests
+│   │   ├── test_reader.py                  # Screen reading & text-to-speech routing tests
 │   │   ├── test_router.py                  # Intent classification & routing tests
 │   │   ├── test_security.py                # Defensive hardening & path traversal tests
 │   │   ├── test_speech.py                  # Speech synthesis lifecycle tests

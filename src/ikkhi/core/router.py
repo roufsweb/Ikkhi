@@ -47,6 +47,9 @@ class IntentRouter:
         (re.compile(r"^\b(minimize window|minimize this)\b", re.IGNORECASE), "window_minimize", {}),
         (re.compile(r"^\b(maximize window|fullscreen)\b", re.IGNORECASE), "window_maximize", {}),
         (re.compile(r"^\b(open terminal|new terminal)\b", re.IGNORECASE), "os_open_terminal", {}),
+
+        # Screen reading / Text-to-speech
+        (re.compile(r"^\b(read text|read selected|read screen|read this|read out loud|read loud|speak text)\b", re.IGNORECASE), "screen_read_text", {}),
     ]
 
     # Visual pointer / screen query indicators

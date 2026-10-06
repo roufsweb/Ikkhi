@@ -5,6 +5,7 @@ from ikkhi.core.router import IntentRouter, RouteTarget, IntentRoute
 from ikkhi.automation.registry import registry
 import ikkhi.automation.windows  # registers Windows actions
 import ikkhi.automation.apps.davinci  # registers DaVinci actions
+from ikkhi.automation.reader import get_screen_reader  # registers screen reading action
 from ikkhi.automation.universal import UniversalAutomationEngine
 from ikkhi.vision.indexer import ScreenIndexer
 from ikkhi.vision.pointer import CursorPointer
@@ -25,6 +26,7 @@ class IkkhiOrchestrator:
         self.gemini_client = GeminiVisualClient(config.ai_tier)
         self.universal_engine = UniversalAutomationEngine(config.universal_automation, self.cursor_pointer)
         self.speech_engine = LocalSpeechEngine(config.audio)
+        self.screen_reader = get_screen_reader(self.speech_engine)
 
     def process_transcript(self, transcript: str) -> str:
         """Processes a transcribed user utterance through the dual-tier routing architecture."""
