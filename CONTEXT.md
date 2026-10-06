@@ -26,8 +26,8 @@
 ## 3. Current Verification State & Metrics
 | Metric | Value | Verification Status |
 | :--- | :--- | :--- |
-| **Active Milestones** | 9 of 9 Core Phases Completed | 🟢 100% Complete |
-| **Automated Test Suite** | 30 / 30 Tests Passing | 🟢 100% Pass Rate (3.28s) |
+| **Active Milestones** | 10 of 10 Core Phases Completed | 🟢 100% Complete |
+| **Automated Test Suite** | 39 / 39 Tests Passing | 🟢 100% Pass Rate (3.26s) |
 | **Standalone Binary** | `dist/Ikkhi.exe` (180.28 MB) | 🟢 Compiled & Verified |
 | **Hardware Grounding** | Windows 11, RTX 3070 CUDA, 4K Display | 🟢 Verified & Calibrated |
 | **Remote Repository** | `https://github.com/roufsweb/Ikkhi` | 🟢 Synced on `main` |
@@ -36,7 +36,7 @@
 
 ## 4. Developer & AI Agent Command Cheat Sheet
 ```powershell
-# Run full automated test suite (30 unit & integration tests)
+# Run full automated test suite (39 unit & integration tests)
 .venv\Scripts\pytest.exe -v
 
 # Launch Desktop GUI Companion (Floating HUD + Tray + Dashboard)
@@ -60,7 +60,7 @@
 ## 5. Architectural Directory Map
 - [`src/ikkhi/core/`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/core/): `config.py` (Pydantic), `paths.py` (frozen runtime paths), `router.py` (Tier 0 vs 1), `orchestrator.py`.
 - [`src/ikkhi/audio/`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/audio/): `capture.py` (RMS buffer), `hotkey.py` (pynput), `stt.py` (Whisper CUDA), `tts.py` (local SAPI).
-- [`src/ikkhi/automation/`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/automation/): `inspector.py` (UIA crawler), `profiles.py` (adaptive per-app cache), `registry.py`, `windows.py`, `apps/davinci.py`.
+- [`src/ikkhi/automation/`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/automation/): `experience.py` (Bayesian mistake learner), `creative/` (cross-app catalog), `universal.py`, `inspector.py`, `profiles.py`, `registry.py`, `windows.py`, `apps/davinci.py`.
 - [`src/ikkhi/vision/`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/vision/): `monitors.py` (multi-display normalizer), `indexer.py` (crop/downsample), `pointer.py` (bezier cursor).
 - [`src/ikkhi/ui/`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/ui/): `theme.py` (obsidian QSS), `overlay.py` (HUD + waveform), `tray.py` (vector tray), `dashboard.py` (token meter), `app.py`.
 - [`dist/Ikkhi.exe`](file:///e:/rouf/software-project/Ikkhi/dist/Ikkhi.exe): Standalone single-file binary.
@@ -70,6 +70,7 @@
 ## 6. Deep Documentation References
 - Detailed Roadmap & Checklist: [`PROGRESS.md`](file:///e:/rouf/software-project/Ikkhi/PROGRESS.md)
 - Complete Codebase Inventory: [`PROJECT_MAP.md`](file:///e:/rouf/software-project/Ikkhi/PROJECT_MAP.md)
+- Creative Apps & Mistake Learning Plan: [`docs/CREATIVE_APPS_AND_EXPERIENCE_PLAN.md`](file:///e:/rouf/software-project/Ikkhi/docs/CREATIVE_APPS_AND_EXPERIENCE_PLAN.md)
 - Full Historical Conversation Log: [`CONVERSATION_SUMMARY.md`](file:///e:/rouf/software-project/Ikkhi/CONVERSATION_SUMMARY.md)
 - GUI & Packaging Blueprint: [`docs/GUI_AND_PACKAGING_PLAN.md`](file:///e:/rouf/software-project/Ikkhi/docs/GUI_AND_PACKAGING_PLAN.md)
 - Security Audit & Hardening: [`.agents/skills/ikkhi-security/SKILL.md`](file:///e:/rouf/software-project/Ikkhi/.agents/skills/ikkhi-security/SKILL.md)

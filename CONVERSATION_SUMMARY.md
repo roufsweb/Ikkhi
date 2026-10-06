@@ -101,3 +101,11 @@
   - Formulated Master Implementation Plan in `docs/COMPACT_CONTEXT_PLAN.md`.
   - Updated `AGENTS.md` with mandatory synchronization rules.
   - Added automated boundedness and coverage test in `tests/unit/test_context.py` (**32/32 tests passing**).
+- **Universal Creative Application Mastery & Experiential Mistake Learning (Phase 10):**
+  - Lifted Ikkhi from DaVinci-only hardcoding into a universal creative assistant mastering DaVinci Resolve, Adobe Premiere Pro, Blender 3D, Adobe Photoshop, After Effects, Figma, Ableton Live, and VS Code.
+  - Formulated Master Implementation Plan in `docs/CREATIVE_APPS_AND_EXPERIENCE_PLAN.md`.
+  - Implemented `src/ikkhi/automation/creative/` (`catalog.py`) mapping cross-app creative intents to native shortcuts.
+  - Implemented `src/ikkhi/automation/experience.py` (`ExperientialMemory`, `StrategyStats`, `ActionOutcome`) utilizing Laplace-smoothed Bayesian confidence scoring.
+  - Built autonomous mistake detection and user correction rollback engine (penalizing bad strategies when user says "no", "wrong", "undo").
+  - Integrated into `UniversalAutomationEngine` prioritizing high-confidence (>0.70) empirical strategies.
+  - Expanded automated test suite to **39/39 tests passing (100% pass rate)** in `tests/unit/test_experience.py` and `tests/unit/test_creative.py`.

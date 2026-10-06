@@ -29,7 +29,8 @@ e:/rouf/software-project/Ikkhi/
 ├── docs/                                   # Research, deconstruction & planning artifacts
 │   ├── CLICKY_ANALYSIS.md                  # In-depth architectural deconstruction of HeyClicky
 │   ├── GUI_AND_PACKAGING_PLAN.md           # Standalone GUI & single-file executable master plan
-│   └── COMPACT_CONTEXT_PLAN.md             # Implementation plan for compact agent context engine
+│   ├── COMPACT_CONTEXT_PLAN.md             # Implementation plan for compact agent context engine
+│   └── CREATIVE_APPS_AND_EXPERIENCE_PLAN.md# Universal creative apps & experiential mistake learning
 │
 ├── pyproject.toml                          # PEP 621 compliant package build & metadata
 ├── requirements.txt                        # Core Python runtime dependencies
@@ -67,11 +68,15 @@ e:/rouf/software-project/Ikkhi/
 │       │   ├── registry.py                 # Action catalog decorator and argument validator
 │       │   ├── inspector.py                # Universal Windows UIA inspector (any foreground window)
 │       │   ├── profiles.py                 # Persistent per-app learning profiles (JSON storage)
+│       │   ├── experience.py               # Bayesian experiential memory & mistake learning engine
 │       │   ├── universal.py                # Universal dynamic execution engine
 │       │   ├── windows.py                  # Windows OS volume and window controls
+│       │   ├── creative/                   # Universal creative application suite adapters
+│       │   │   ├── __init__.py
+│       │   │   └── catalog.py              # DaVinci, Premiere, Blender, Photoshop, Ableton, etc.
 │       │   └── apps/
 │       │       ├── __init__.py
-│       │       └── davinci.py              # DaVinci Resolve blade cut, ripple delete, etc.
+│       │       └── davinci.py              # DaVinci Resolve legacy macro hooks
 │       ├── ai/                             # Multimodal AI tier
 │       │   ├── __init__.py
 │       │   └── gemini.py                   # Token-conscious Google AI Studio client
@@ -87,13 +92,15 @@ e:/rouf/software-project/Ikkhi/
 ├── storage/                                # [Runtime] Persistent application knowledge
 │   └── profiles/                           # Per-application JSON control maps & learned macros
 │
-├── tests/                                  # Comprehensive test suite (32 automated tests)
+├── tests/                                  # Comprehensive test suite (39 automated tests)
 │   ├── __init__.py
 │   ├── unit/                               # Isolated unit tests
 │   │   ├── __init__.py
 │   │   ├── test_audio.py                   # Audio buffer and hotkey tests
 │   │   ├── test_config.py                  # Configuration loader tests
 │   │   ├── test_context.py                 # Compact context snapshot boundedness & coverage
+│   │   ├── test_creative.py                # Universal creative app catalog & shortcut resolution
+│   │   ├── test_experience.py              # Bayesian experiential memory & mistake learning tests
 │   │   ├── test_monitors.py                # Multi-monitor enumeration tests
 │   │   ├── test_router.py                  # Intent classification & routing tests
 │   │   ├── test_security.py                # Defensive hardening & path traversal tests
