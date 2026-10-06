@@ -80,7 +80,8 @@ class AppConfig(BaseSettings):
     @classmethod
     def load_from_yaml(cls, yaml_path: Path | str = "config.yaml") -> "AppConfig":
         """Load configuration from a YAML file, overlaid with environment variables."""
-        p = Path(yaml_path)
+        from ikkhi.core.paths import resolve_config_path
+        p = resolve_config_path(yaml_path)
         if not p.is_file():
             return cls()
 

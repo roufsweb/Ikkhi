@@ -50,7 +50,11 @@ class ProfileManager:
     """Manages persistent JSON profiles for individual applications used by the user."""
 
     def __init__(self, profiles_dir: str | Path = "storage/profiles") -> None:
-        self.profiles_dir = Path(profiles_dir).resolve()
+        if str(profiles_dir) in ("storage/profiles", "storage\\profiles"):
+            from ikkhi.core.paths import get_profiles_dir
+            self.profiles_dir = get_profiles_dir()
+        else:
+            self.profiles_dir = Path(profiles_dir).resolve()
         self.profiles_dir.mkdir(parents=True, exist_ok=True)
         self._cache: Dict[str, AppProfile] = {}
 

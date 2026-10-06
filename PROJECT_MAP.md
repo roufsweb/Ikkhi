@@ -25,12 +25,14 @@ e:/rouf/software-project/Ikkhi/
 ├── PROJECT_GOALS.md                        # Vision, architecture pillars, and roadmap
 ├── PROJECT_MAP.md                          # (This file) Complete codebase & module map
 │
-├── docs/                                   # Research and deconstruction artifacts
-│   └── CLICKY_ANALYSIS.md                  # In-depth architectural deconstruction of HeyClicky
+├── docs/                                   # Research, deconstruction & planning artifacts
+│   ├── CLICKY_ANALYSIS.md                  # In-depth architectural deconstruction of HeyClicky
+│   └── GUI_AND_PACKAGING_PLAN.md           # Standalone GUI & single-file executable master plan
 │
 ├── pyproject.toml                          # PEP 621 compliant package build & metadata
 ├── requirements.txt                        # Core Python runtime dependencies
 ├── config.yaml                             # Central configuration (audio, AI tiers, pointer)
+├── Ikkhi.spec                              # PyInstaller standalone executable bundling specification
 ├── .env.example                            # Environment variables template (API keys, hotkeys)
 ├── .gitignore                              # Comprehensive Python & OS ignore rules
 ├── README.md                               # Enterprise documentation & quickstart
@@ -38,10 +40,11 @@ e:/rouf/software-project/Ikkhi/
 ├── src/                                    # Standard PEP 517/621 src-layout
 │   └── ikkhi/                              # Core application package
 │       ├── __init__.py                     # Package version and export definitions
-│       ├── __main__.py                     # CLI entry point (`python -m ikkhi`)
+│       ├── __main__.py                     # Universal entry point (GUI / Headless / CLI modes)
 │       ├── py.typed                        # PEP 561 static typing marker
 │       ├── core/                           # System orchestration and routing
 │       │   ├── __init__.py
+│       │   ├── paths.py                    # Cross-platform frozen & runtime path resolver
 │       │   ├── exceptions.py               # Domain-specific error hierarchies
 │       │   ├── config.py                   # Pydantic Settings configuration loader
 │       │   ├── router.py                   # High-throughput Tier 0 vs Tier 1 intent router
@@ -67,14 +70,22 @@ e:/rouf/software-project/Ikkhi/
 │       │   └── apps/
 │       │       ├── __init__.py
 │       │       └── davinci.py              # DaVinci Resolve blade cut, ripple delete, etc.
-│       └── ai/                             # Multimodal AI tier
-│           ├── __init__.py
-│           └── gemini.py                   # Token-conscious Google AI Studio client
+│       ├── ai/                             # Multimodal AI tier
+│       │   ├── __init__.py
+│       │   └── gemini.py                   # Token-conscious Google AI Studio client
+│       └── ui/                             # Desktop Graphical User Interface
+│           ├── __init__.py                 # UI component exports
+│           ├── theme.py                    # Obsidian dark-mode stylesheet & design tokens
+│           ├── overlay.py                  # Floating frameless companion HUD & waveform
+│           ├── tray.py                     # Windows Shell notification tray icon & menu
+│           ├── dashboard.py                # Token analytics, metrics cards & settings panel
+│           ├── controller.py               # Asynchronous QThread audio inference controller
+│           └── app.py                      # Master Qt application coordinator
 │
 ├── storage/                                # [Runtime] Persistent application knowledge
 │   └── profiles/                           # Per-application JSON control maps & learned macros
 │
-├── tests/                                  # Comprehensive test suite (24 automated tests)
+├── tests/                                  # Comprehensive test suite (30 automated tests)
 │   ├── __init__.py
 │   ├── unit/                               # Isolated unit tests
 │   │   ├── __init__.py
@@ -84,6 +95,7 @@ e:/rouf/software-project/Ikkhi/
 │   │   ├── test_router.py                  # Intent classification & routing tests
 │   │   ├── test_security.py                # Defensive hardening & path traversal tests
 │   │   ├── test_speech.py                  # Speech synthesis lifecycle tests
+│   │   ├── test_ui.py                      # GUI widgets, tray, overlay & path resolver tests
 │   │   └── test_universal.py               # Universal inspector & adaptive profile tests
 │   └── integration/                        # Master end-to-end integration tests
 │       ├── __init__.py
@@ -91,7 +103,8 @@ e:/rouf/software-project/Ikkhi/
 │
 └── scripts/                                # Maintenance & diagnostic routines
     ├── validate_environment.py             # System & hardware validation routine
-    └── test_live_voice.py                  # Interactive microphone & voice verification tool
+    ├── test_live_voice.py                  # Interactive microphone & voice verification tool
+    └── build_executable.py                 # PyInstaller single-file binary compilation pipeline
 ```
 
 ---

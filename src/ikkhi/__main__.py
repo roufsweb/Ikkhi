@@ -1,5 +1,6 @@
 """
-CLI entry point and background daemon for the Ikkhi desktop assistant.
+Primary entry point and application launcher for the Ikkhi desktop ecosystem.
+Supports full Graphical User Interface (default), Headless Daemon, and CLI Command modes.
 """
 
 import sys
@@ -8,32 +9,18 @@ import signal
 import logging
 from ikkhi.core.config import AppConfig
 from ikkhi.core.orchestrator import IkkhiOrchestrator
-from ikkhi.audio.capture import AudioCaptureEngine
-from ikkhi.audio.stt import WhisperSTTEngine
-from ikkhi.audio.hotkey import PushToTalkListener
 
 logger = logging.getLogger("ikkhi")
 
 
-def main() -> None:
-    """Initialize system configuration and launch orchestrator daemon."""
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-    )
+def run_headless_daemon(config: AppConfig) -> None:
+    """Launch headless background daemon without Qt GUI dependencies."""
+    from ikkhi.audio.capture import AudioCaptureEngine
+    from ikkhi.audio.stt import WhisperSTTEngine
+    from ikkhi.audio.hotkey import PushToTalkListener
 
-    config = AppConfig.load_from_yaml("config.yaml")
     orchestrator = IkkhiOrchestrator(config)
 
-    # Mode A: Direct CLI argument simulation (for testing & scripts)
-    if len(sys.argv) > 1:
-        test_command = " ".join(sys.argv[1:])
-        logger.info("Executing simulated CLI command: '%s'", test_command)
-        result = orchestrator.process_transcript(test_command)
-        print(f"\nResult: {result}")
-        return
-
-    # Mode B: Live Background Assistant Daemon
     print("\n" + "=" * 65)
     print("      IKKHI VOICE-CONTROLLED DESKTOP ASSISTANT DAEMON")
     print("=" * 65)
@@ -46,9 +33,7 @@ def main() -> None:
 
     capture = AudioCaptureEngine(config.audio)
     stt_engine = WhisperSTTEngine(config.audio, config.network)
-    
-    # Warm up Whisper model in background
-    logger.info("Pre-warming local Whisper model on CUDA...")
+
     try:
         stt_engine.load_model()
     except Exception as exc:
@@ -84,7 +69,6 @@ def main() -> None:
     )
     hotkey_listener.start()
 
-    # Graceful shutdown handler
     running = True
 
     def sig_handler(sig, frame):
@@ -103,6 +87,35 @@ def main() -> None:
             time.sleep(0.5)
     except KeyboardInterrupt:
         sig_handler(None, None)
+
+
+def main() -> None:
+    """Initialize system configuration and route to GUI, Headless, or CLI modes."""
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+    )
+
+    config = AppConfig.load_from_yaml("config.yaml")
+
+    # Mode 1: Explicit Headless Daemon
+    if "--headless" in sys.argv:
+        run_headless_daemon(config)
+        return
+
+    # Mode 2: Direct CLI Simulation Command
+    if "--cli" in sys.argv:
+        cli_args = [arg for arg in sys.argv[1:] if arg != "--cli"]
+        test_command = " ".join(cli_args)
+        orchestrator = IkkhiOrchestrator(config)
+        logger.info("Executing simulated CLI command: '%s'", test_command)
+        result = orchestrator.process_transcript(test_command)
+        print(f"\nResult: {result}")
+        return
+
+    # Mode 3: Desktop Graphical User Interface (Default)
+    from ikkhi.ui.app import launch_gui
+    sys.exit(launch_gui(config))
 
 
 if __name__ == "__main__":
