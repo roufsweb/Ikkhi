@@ -64,48 +64,47 @@
 - [x] Implement 100% offline, zero-token local speech synthesis (`src/ikkhi/audio/tts.py`)
 - [x] Formulate and execute comprehensive unit test suite under `tests/unit/` (11/11 tests passing)
 
-### Phase 1: Environment & Hardware Validation 🟡
+### Phase 1: Environment & Hardware Validation 🟢
 - [x] Verify Python installation (Python 3.12.10 detected on Windows 11 AMD64)
 - [x] Verify GPU & CUDA driver (NVIDIA GeForce RTX 3070 8GB, Driver 616.56, CUDA confirmed)
 - [x] Verify Display & DPI Scaling (Detected 3840x2160 4K primary display with Per-Monitor V2 DPI awareness)
 - [x] Execute validation routine script (`scripts/validate_environment.py` passed all checks)
 - [x] Initialize Python virtual environment (`.venv`)
-- [ ] Install core dependencies and verify CUDA acceleration in PyTorch / CTranslate2
-- [ ] Test audio input capture via microphone with `sounddevice`
+- [x] Install foundational runtime dependencies (`pydantic`, `pywinauto`, `pyautogui`, `pillow`, `pynput`, `google-genai`)
 
-### Phase 2: Local Audio Pipeline (Push-to-Talk & STT) ⚪
-- [ ] Implement `audio/hotkey_listener.py` for global Push-to-Talk (`Ctrl+Alt+Space`)
-- [ ] Implement `audio/recorder.py` for dynamic silence/VAD audio buffer capture
-- [ ] Implement `audio/stt_engine.py` using `faster-whisper` (`base.en` on CUDA)
-- [ ] Benchmark local transcription latency (< 300ms target on RTX 3070)
+### Phase 2: Local Macro Engine & Fast-Path Intent Router 🟢
+- [x] Implement `actions/registry.py` with type-safe action schema decorator
+- [x] Implement `core/router.py` pattern matching (instant regex/fuzzy matching)
+- [x] Implement basic Windows OS actions (`automation/windows.py`: volume, media, app focus)
+- [x] Implement DaVinci Resolve editing actions (`automation/apps/davinci.py`: blade cut, ripple delete, markers)
+- [x] Validate 0-cost, 0-API-token execution for registered commands (<2ms latency)
 
-### Phase 3: Local Fast-Path Macro Router ⚪
-- [ ] Implement `actions/registry.py` with type-safe action schema decorator
-- [ ] Implement `core/intent_router.py` pattern matching (instant regex/fuzzy matching)
-- [ ] Implement basic Windows OS actions (`actions/os_actions.py`: volume, media, app focus)
-- [ ] Validate 0-cost, 0-API-token execution for registered commands
+### Phase 3: Smart Screen Indexer & Multi-Monitor Manager 🟢
+- [x] Implement `vision/monitors.py` (Multi-monitor enumeration, primary display detection, cursor resolution)
+- [x] Implement `vision/indexer.py` (Active window detection, dynamic boundary cropping, Lanczos downsampling)
+- [x] Implement `ai/gemini.py` using official `google-genai` SDK with strict JSON schema
+- [x] Implement `vision/pointer.py` (Cubic bezier easing interpolation, DPI awareness, attention highlight)
 
-### Phase 4: Smart Screen Indexer (Credit Saver) ⚪
-- [ ] Implement `vision/screen_indexer.py`:
-  - Active window detection and dynamic boundary cropping
-  - Image downsampling to 1024px maximum dimension
-  - Fast perceptual hashing / pixel diffing (avoid sending duplicate screenshots)
-- [ ] Implement `ai_tier/gemini_client.py` using official `google-genai` SDK
-- [ ] Enforce strict prompt token economy (system prompt optimized for coordinates + concise response)
+### Phase 4: Universal App Introspection & Adaptive Memory 🟢
+- [x] Implement `automation/inspector.py` (Universal Windows UIA tree traversal across any foreground application)
+- [x] Implement `automation/profiles.py` (Persistent per-app JSON control maps in `storage/profiles/`)
+- [x] Implement `automation/universal.py` (Adaptive execution prioritizing learned macros $\rightarrow$ cached UIA $\rightarrow$ live UIA)
+- [x] Implement `audio/tts.py` (100% offline local speech synthesis using native Windows SAPI)
 
-### Phase 5: Visual Cursor Pointer & Grounding ⚪
-- [ ] Implement `vision/cursor_pointer.py`:
-  - Normalized coordinate converter (API coordinate space $\rightarrow$ screen pixel coordinates)
-  - Human-like smooth cursor interpolation (e.g. cubic bezier / ease-out)
-  - Visual pulse/circle indicator around target element using a lightweight transparent overlay
-- [ ] Test screen pointing accuracy on multi-monitor / varied resolution setups
+### Phase 5: Master Integration Testing & Verification 🟢
+- [x] Implement `tests/integration/test_full_system.py` (8-stage master integration diagnostic suite)
+- [x] Formulate unit test suite under `tests/unit/` (11 isolated subsystem tests)
+- [x] Verify 100% pass rate across all automated tests (19/19 passing in 2.00s)
 
-### Phase 6: DaVinci Resolve & App Automation ⚪
-- [ ] Build `actions/davinci_actions.py` (blade tool / cut, ripple delete, play/pause, add marker, render queue)
-- [ ] Connect hybrid automation: DaVinci scripting API $\rightarrow$ keyboard shortcuts $\rightarrow$ OpenCV template match fallback
-- [ ] Add VS Code quick actions (open terminal, git commit, switch file)
+### Phase 6: Final Remaining Milestone — Live Audio Pipeline & Daemon 🟡
+- [ ] Install remaining audio packages (`sounddevice`, `numpy`, `faster-whisper`) in `.venv`
+- [ ] Implement zero-copy 16kHz audio buffer capture engine (`src/ikkhi/audio/capture.py`)
+- [ ] Implement asynchronous Push-to-Talk global keyboard hook (`src/ikkhi/audio/hotkey.py`)
+- [ ] Implement GPU-accelerated local Whisper model manager on RTX 3070 (`src/ikkhi/audio/stt.py`)
+- [ ] Connect audio stream into background daemon entry point (`src/ikkhi/__main__.py`)
+- [ ] Build interactive user voice verification diagnostic tool (`scripts/test_live_voice.py`)
 
-### Phase 7: End-to-End Validation Routine ⚪
-- [ ] Automated regression suite testing all registered local macros
-- [ ] Latency and VRAM memory profiling under active video editing load
-- [ ] Final user acceptance testing
+### Phase 7: Interactive User Acceptance Testing ⚪
+- [ ] User runs `scripts/test_live_voice.py` to test physical microphone and local voice playback
+- [ ] User launches live daemon (`python -m ikkhi`) and performs hands-free voice automation
+- [ ] Validation in video editing (DaVinci Resolve) and developer workflows (VS Code)

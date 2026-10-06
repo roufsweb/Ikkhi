@@ -43,6 +43,12 @@
   - **Overall Project Completion:** **82%** of full software architecture complete.
   - **Remaining Work:** **18%** (specifically assembling the live microphone audio stream and GPU Whisper model loader).
   - **User Testing Readiness:** The user can test the live interactive voice assistant hands-free upon completion of the audio stream daemon (estimated in the immediate next turn).
+- [x] Formulated detailed Master Implementation Plan for the final 18% in [IMPLEMENTATION_PLAN.md](file:///e:/rouf/software-project/Ikkhi/IMPLEMENTATION_PLAN.md):
+  - Step 6.1: Zero-copy 16kHz audio buffer capture engine (`src/ikkhi/audio/capture.py`).
+  - Step 6.2: Global asynchronous push-to-talk keyboard hook (`src/ikkhi/audio/hotkey.py`).
+  - Step 6.3: GPU-accelerated faster-whisper CTranslate2 pipeline on RTX 3070 (`src/ikkhi/audio/stt.py`).
+  - Step 6.4: Interactive background daemon entry point (`src/ikkhi/__main__.py`).
+  - Step 6.5: Interactive user voice diagnostic utility (`scripts/test_live_voice.py`).
 - [x] Enforced strict rules in [AGENTS.md](file:///e:/rouf/software-project/Ikkhi/AGENTS.md) to continually maintain `PROGRESS.md`, `PROJECT_MAP.md`, and `CONVERSATION_SUMMARY.md` after every batch of changes.
 - [x] Created [PROGRESS.md](file:///e:/rouf/software-project/Ikkhi/PROGRESS.md) with full project schedule, milestones, and task checklists.
 - [x] Created [PROJECT_MAP.md](file:///e:/rouf/software-project/Ikkhi/PROJECT_MAP.md) detailing the codebase hierarchy, module flow, and component responsibilities.
