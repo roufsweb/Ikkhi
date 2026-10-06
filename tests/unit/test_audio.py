@@ -28,3 +28,24 @@ def test_hotkey_listener_initialization():
     listener = PushToTalkListener(settings)
     assert listener._is_active is False
     assert listener.settings.push_to_talk_key == "ctrl+alt+space"
+
+
+def test_audio_capture_live_rms():
+    settings = AudioSettings()
+    capture = AudioCaptureEngine(settings)
+    assert capture.get_live_rms() == 0.0
+
+
+def test_wake_word_listener_lifecycle():
+    from unittest.mock import MagicMock
+    from ikkhi.audio.wakeword import WakeWordListener
+
+    settings = AudioSettings()
+    mock_wake = MagicMock()
+    listener = WakeWordListener(settings=settings, on_wake=mock_wake)
+    assert listener._running is False
+    assert listener.target_phrase == "hey ikkhi"
+
+    # Test programmatic / manual wake trigger
+    listener.trigger_manual("hey ikkhi")
+    mock_wake.assert_called_once_with("hey ikkhi", None)

@@ -23,6 +23,7 @@ class AudioCaptureEngine:
         self._audio_queue: queue.Queue[np.ndarray] = queue.Queue()
         self._stream: Optional[sd.InputStream] = None
         self._is_recording = False
+        self._latest_rms: float = 0.0
 
     def _audio_callback(self, indata: np.ndarray, frames: int, time_info, status) -> None:
         """High-priority audio callback pushing raw chunks onto the queue."""
@@ -30,7 +31,13 @@ class AudioCaptureEngine:
             logger.warning("Audio input status flag: %s", status)
         if self._is_recording:
             # Flatten to 1D mono float32 array and push copy into buffer queue
-            self._audio_queue.put(indata[:, 0].copy())
+            chunk = indata[:, 0].copy()
+            self._latest_rms = float(np.sqrt(np.mean(np.square(chunk)))) if len(chunk) > 0 else 0.0
+            self._audio_queue.put(chunk)
+
+    def get_live_rms(self) -> float:
+        """Returns the RMS amplitude of the latest recorded chunk for visualizer feeds."""
+        return self._latest_rms
 
     def start_recording(self) -> None:
         """Initiates physical audio capture from the default microphone."""

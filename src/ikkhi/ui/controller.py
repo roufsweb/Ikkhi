@@ -15,6 +15,7 @@ from ikkhi.core.orchestrator import IkkhiOrchestrator
 from ikkhi.audio.capture import AudioCaptureEngine
 from ikkhi.audio.stt import WhisperSTTEngine
 from ikkhi.audio.hotkey import PushToTalkListener
+from ikkhi.audio.wakeword import WakeWordListener
 
 logger = logging.getLogger("ikkhi.ui.controller")
 
@@ -43,8 +44,8 @@ class AudioInferenceWorker(QThread):
                 return
 
             # Determine routing classification preview
-            intent = self.orchestrator.router.classify_intent(transcript_clean)
-            tier_name = "Tier 0 (Local Deterministic)" if intent.tier == 0 else "Tier 1 (Cloud Multimodal)"
+            route = self.orchestrator.router.route(transcript_clean)
+            tier_name = "Tier 0 (Local Deterministic)" if not route.is_cloud_request else "Tier 1 (Cloud Multimodal)"
 
             # Execute intent via orchestrator
             response = self.orchestrator.process_transcript(transcript_clean)
@@ -82,6 +83,15 @@ class GUIController(QObject):
             on_stop=self._on_hotkey_released
         )
 
+        # Setup Wake-Word listener
+        self.wakeword_listener: Optional[WakeWordListener] = None
+        if config.audio.activation_mode in ("both", "wake_word"):
+            self.wakeword_listener = WakeWordListener(
+                settings=config.audio,
+                on_wake=self._on_wake_word_detected,
+                stt_engine=self.stt_engine
+            )
+
     def start_listeners(self) -> None:
         """Commence background keyboard hooks and warm up Whisper STT."""
         try:
@@ -89,6 +99,13 @@ class GUIController(QObject):
             logger.info("Global Push-to-Talk hook started successfully.")
         except Exception as exc:
             logger.warning("Could not hook global hotkey: %s", exc)
+
+        if self.wakeword_listener is not None:
+            try:
+                self.wakeword_listener.start()
+                logger.info("Wake-Word listener started successfully.")
+            except Exception as exc:
+                logger.warning("Could not start wake-word listener: %s", exc)
 
         # Pre-warm local Whisper model
         try:
@@ -102,8 +119,29 @@ class GUIController(QObject):
             self.hotkey_listener.stop()
         except Exception:
             pass
+        if self.wakeword_listener is not None:
+            try:
+                self.wakeword_listener.stop()
+            except Exception:
+                pass
         self.capture_engine.close()
         self.orchestrator.speech_engine.stop()
+
+    def _on_wake_word_detected(self, trigger_name: str, optional_command: Optional[str]) -> None:
+        """Callback invoked when wake-word is triggered."""
+        if self._is_muted:
+            return
+
+        logger.info("Wake-word triggered: %s (command: %s)", trigger_name, optional_command)
+        if optional_command:
+            # Command was already provided with the wake-word
+            self.execute_simulated_command(optional_command)
+        else:
+            self.state_changed.emit("listening", "Wake word recognized! Listening...")
+            # Automatically record speech command for 3 seconds
+            self.capture_engine.start_recording()
+            time.sleep(3.0)
+            self._on_hotkey_released()
 
     def set_muted(self, muted: bool) -> None:
         """Toggle microphone mute status."""
@@ -155,8 +193,8 @@ class GUIController(QObject):
     def execute_simulated_command(self, command_text: str) -> str:
         """Simulate programmatic voice command execution for automated diagnostics."""
         now_str = datetime.now().strftime("%H:%M:%S")
-        intent = self.orchestrator.router.classify_intent(command_text)
-        tier_name = "Tier 0 (Local Deterministic)" if intent.tier == 0 else "Tier 1 (Cloud Multimodal)"
+        route = self.orchestrator.router.route(command_text)
+        tier_name = "Tier 0 (Local Deterministic)" if not route.is_cloud_request else "Tier 1 (Cloud Multimodal)"
 
         self.state_changed.emit("processing", f"Executing: {command_text}")
         response = self.orchestrator.process_transcript(command_text)

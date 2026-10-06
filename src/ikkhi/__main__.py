@@ -18,18 +18,20 @@ def run_headless_daemon(config: AppConfig) -> None:
     from ikkhi.audio.capture import AudioCaptureEngine
     from ikkhi.audio.stt import WhisperSTTEngine
     from ikkhi.audio.hotkey import PushToTalkListener
+    from ikkhi.audio.wakeword import WakeWordListener
 
     orchestrator = IkkhiOrchestrator(config)
 
     print("\n" + "=" * 65)
     print("      IKKHI VOICE-CONTROLLED DESKTOP ASSISTANT DAEMON")
     print("=" * 65)
+    print(f"  • Wake Word:           Say '{config.audio.wake_word.upper()}' aloud")
     print(f"  • Trigger Hotkey:      [{config.audio.push_to_talk_key.upper()}] (Push-and-Hold to speak)")
     print(f"  • STT Model:           faster-whisper [{config.audio.whisper_model}] on {config.audio.whisper_device.upper()}")
     print(f"  • Universal Indexing:  Active ({config.universal_automation.profiles_directory})")
-    print(f"  • Idle CPU Budget:     0.0%")
+    print(f"  • Idle CPU Budget:     <1.0%")
     print("=" * 65)
-    print("Ready and listening in background. Hold hotkey, speak, and release.\n")
+    print(f"Ready and listening in background. Say '{config.audio.wake_word}' or hold hotkey.\n")
 
     capture = AudioCaptureEngine(config.audio)
     stt_engine = WhisperSTTEngine(config.audio, config.network)
@@ -62,12 +64,43 @@ def run_headless_daemon(config: AppConfig) -> None:
         except Exception as exc:
             logger.error("Error during live speech handling: %s", exc)
 
+    def on_wake_detected(trigger_name: str, optional_command: Optional[str]):
+        print(f"\n>>> [WAKE DETECTED] Wake phrase recognized via '{trigger_name}'!")
+        if optional_command:
+            print(f">>> Direct Command: \"{optional_command}\"")
+            response = orchestrator.process_transcript(optional_command)
+            print(f">>> Response: {response}\n")
+        else:
+            print(">>> Assistant awakened! Speak your command into the microphone...")
+            orchestrator.speech_engine.speak("I'm listening.")
+            capture.start_recording()
+            time.sleep(3.0)
+            audio = capture.stop_recording()
+            if len(audio) > 0:
+                try:
+                    transcript, _ = stt_engine.transcribe(audio)
+                    if transcript.strip():
+                        print(f">>> Spoken Command: \"{transcript}\"")
+                        response = orchestrator.process_transcript(transcript)
+                        print(f">>> Response: {response}\n")
+                except Exception as exc:
+                    logger.error("Error processing wake command: %s", exc)
+
     hotkey_listener = PushToTalkListener(
         settings=config.audio,
         on_start=on_recording_start,
         on_stop=on_recording_stop
     )
     hotkey_listener.start()
+
+    wakeword_listener: Optional[WakeWordListener] = None
+    if config.audio.activation_mode in ("both", "wake_word"):
+        wakeword_listener = WakeWordListener(
+            settings=config.audio,
+            on_wake=on_wake_detected,
+            stt_engine=stt_engine
+        )
+        wakeword_listener.start()
 
     running = True
 
@@ -76,6 +109,8 @@ def run_headless_daemon(config: AppConfig) -> None:
         print("\nShutting down Ikkhi daemon gracefully...")
         running = False
         hotkey_listener.stop()
+        if wakeword_listener:
+            wakeword_listener.stop()
         capture.close()
         orchestrator.speech_engine.stop()
         sys.exit(0)
