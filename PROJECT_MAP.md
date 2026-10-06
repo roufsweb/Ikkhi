@@ -28,6 +28,7 @@ e:/rouf/software-project/Ikkhi/
 │
 ├── docs/                                   # Research, deconstruction & planning artifacts
 │   ├── CLICKY_ANALYSIS.md                  # In-depth architectural deconstruction of HeyClicky
+│   ├── COMPARISON_OPENCLAW.md              # In-depth architectural comparison: Ikkhi vs OpenClaw
 │   ├── GUI_AND_PACKAGING_PLAN.md           # Standalone GUI & single-file executable master plan
 │   ├── COMPACT_CONTEXT_PLAN.md             # Implementation plan for compact agent context engine
 │   └── CREATIVE_APPS_AND_EXPERIENCE_PLAN.md# Universal creative apps & experiential mistake learning
