@@ -1,10 +1,9 @@
-"""
-Standard Windows operating system automation actions.
-"""
-
 import ctypes
 import pyautogui
 from ikkhi.automation.registry import registry
+
+# Allow macro hotkeys to dispatch even if cursor rests at physical corner
+pyautogui.FAILSAFE = False
 
 # Windows Virtual-Key Codes for Media
 VK_VOLUME_MUTE = 0xAD

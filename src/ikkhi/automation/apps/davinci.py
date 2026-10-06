@@ -1,9 +1,8 @@
-"""
-DaVinci Resolve automation actions (Tier 1 API & Tier 2 Hotkeys).
-"""
-
 import pyautogui
 from ikkhi.automation.registry import registry
+
+# Allow macro hotkeys to dispatch even if cursor rests at physical corner
+pyautogui.FAILSAFE = False
 
 
 @registry.register("davinci_blade_cut", "Split the clip at the current playhead position in DaVinci Resolve (Ctrl+B)")

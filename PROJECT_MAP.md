@@ -72,13 +72,18 @@ e:/rouf/software-project/Ikkhi/
 ├── storage/                                # [Runtime] Persistent application knowledge
 │   └── profiles/                           # Per-application JSON control maps & learned macros
 │
-├── tests/                                  # Comprehensive test suite
+├── tests/                                  # Comprehensive test suite (19 automated tests)
 │   ├── __init__.py
-│   └── unit/
+│   ├── unit/                               # Isolated unit tests
+│   │   ├── __init__.py
+│   │   ├── test_config.py                  # Configuration loader tests
+│   │   ├── test_monitors.py                # Multi-monitor enumeration tests
+│   │   ├── test_router.py                  # Intent classification & routing tests
+│   │   ├── test_speech.py                  # Speech synthesis lifecycle tests
+│   │   └── test_universal.py               # Universal inspector & adaptive profile tests
+│   └── integration/                        # Master end-to-end integration tests
 │       ├── __init__.py
-│       ├── test_config.py                  # Configuration loader tests
-│       ├── test_router.py                  # Intent classification & routing tests
-│       └── test_universal.py               # Universal inspector & adaptive profile tests
+│       └── test_full_system.py             # 8-stage comprehensive subsystem verification
 │
 └── scripts/                                # Maintenance & diagnostic routines
     └── validate_environment.py             # System & hardware validation routine
