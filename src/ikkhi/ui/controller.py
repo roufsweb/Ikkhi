@@ -8,7 +8,7 @@ import logging
 import numpy as np
 from datetime import datetime
 from typing import Optional
-from PyQt6.QtCore import QObject, QThread, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QObject, QThread, pyqtSignal, pyqtSlot, QTimer
 
 from ikkhi.core.config import AppConfig
 from ikkhi.core.orchestrator import IkkhiOrchestrator
@@ -138,10 +138,9 @@ class GUIController(QObject):
             self.execute_simulated_command(optional_command)
         else:
             self.state_changed.emit("listening", "Wake word recognized! Listening...")
-            # Automatically record speech command for 3 seconds
+            # Automatically record speech command for 3 seconds without blocking GUI
             self.capture_engine.start_recording()
-            time.sleep(3.0)
-            self._on_hotkey_released()
+            QTimer.singleShot(3000, self._on_hotkey_released)
 
     def set_muted(self, muted: bool) -> None:
         """Toggle microphone mute status."""

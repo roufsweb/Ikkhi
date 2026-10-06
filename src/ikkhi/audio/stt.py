@@ -79,7 +79,7 @@ class WhisperSTTEngine:
                 audio_array,
                 beam_size=1, # Greedy search for maximum real-time speed
                 language="en",
-                vad_filter=True # Trim silent frames locally
+                vad_filter=False # Do not discard short acoustic speech buffers
             )
             
             transcript_parts = []

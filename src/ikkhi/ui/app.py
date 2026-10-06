@@ -89,12 +89,14 @@ class IkkhiApplication:
     def start(self) -> None:
         """Launch visual presentation and commence background hotkey monitoring."""
         self.overlay.show()
+        self.dashboard.show()
+        self.dashboard.activateWindow()
         self.tray.show()
         self.controller.start_listeners()
 
         self.tray.notify(
             "Ikkhi Assistant Online",
-            f"Push-to-Talk active: [{self.config.audio.push_to_talk_key.upper()}]. Ready for commands."
+            f"Say 'Hey Ikkhi' or hold [{self.config.audio.push_to_talk_key.upper()}]. Ready for commands."
         )
 
     def shutdown(self) -> None:

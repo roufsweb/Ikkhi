@@ -176,12 +176,14 @@ class WakeWordListener:
                             try:
                                 transcript, _ = self.stt_engine.transcribe(float32_audio)
                                 clean = transcript.lower().strip()
-                                logger.debug("Acoustic buffer transcript: '%s'", clean)
+                                logger.info("Mic input heard: '%s'", clean)
 
                                 # Check for phonetic variants of "Hey Ikkhi"
                                 wake_keywords = [
-                                    "hey ikkhi", "hey ikki", "hey eki", "hey iki",
-                                    "ikkhi", "ikki", "ickey", "iki", "hi ikkhi"
+                                    "hey ikkhi", "hey ikki", "hey eki", "hey iki", "hey ikhi",
+                                    "hey iggy", "hey itchy", "hey nicki", "hey mickey", "hey cookie",
+                                    "ikkhi", "ikki", "ickey", "iki", "ikhi", "hi ikkhi",
+                                    "hey key", "hey, ikkhi", "hey, ikki"
                                 ]
                                 matched_kw = None
                                 for kw in wake_keywords:

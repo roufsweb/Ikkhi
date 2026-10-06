@@ -229,7 +229,7 @@ class FloatingCompanionOverlay(QWidget):
                 "background-color: rgba(0, 229, 255, 0.18); color: #00e5ff; border-radius: 13px;"
             )
             self.title_label.setText("Ikkhi Ready")
-            self.detail_label.setText(detail or "Hold Ctrl+Alt+Space")
+            self.detail_label.setText(detail or "Say 'Hey Ikkhi' or Hold Ctrl+Alt+Space")
             self.waveform.setVisible(False)
             self.progress_bar.setVisible(False)
 
