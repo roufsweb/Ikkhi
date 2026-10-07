@@ -9,20 +9,22 @@
 
 | Metric | Measurement | Status |
 | :--- | :--- | :--- |
-| **Total Core Milestones** | 12 Major Phases | **12 Completed (100%)** |
-| **Architectural Modules Deployed** | 27 Core Components | **27 Deployed (100%)** |
-| **Automated Test Coverage** | 47 Automated Tests | **47/47 Passing (100%)** |
+| **Total Core Milestones** | 13 Major Phases | **13 Completed (100%)** |
+| **Architectural Modules Deployed** | 29 Core Components | **29 Deployed (100%)** |
+| **Automated Test Coverage** | 53 Automated Tests | **53/53 Passing (100%)** |
 | **Defensive Security Hardening** | Injection & Traversal Protected | **Hardened (A+ Rating)** |
 | **Token Cost Reduction vs. HeyClicky**| Baseline 100% Cloud $\rightarrow$ <5% Cloud | **>95% Token Savings** |
 | **Multi-Display Topologies Supported** | Single + Multi-Monitor Virtual Grids | **100% Supported** |
 | **GUI Desktop Companion** | Floating HUD + System Tray + Dashboard | **Deployed & Verified** |
-| **Single Executable Deployment** | Self-Contained `dist/Ikkhi.exe` (180MB) | **Deployed & Verified** |
+| **Single Executable Deployment** | Self-Contained `dist/Ikkhi.exe` | **Deployed & Verified** |
 | **Compact Agent Context Snapshot** | High-Density `CONTEXT.md` (<100 lines) | **Deployed & Verified** |
 | **Creative Experiential Learning** | Bayesian Mistake & Strategy Learner | **Deployed & Verified** |
 | **Screen Reading Subsystem** | Zero-Token Native Screen TTS | **Deployed & Verified** |
-| **DeepSeek & Open Agent Blueprint** | MLA, MoE, Code-as-Action Analysis | **Documented & Mapped** |
+| **Persistent Logging & Correlation** | Rotating `storage/ikkhi.log` + Key/RMS/Focus Tracker | **Deployed & Verified** |
+| **Natural Neural Voice (TTS)** | Google Assistant Style Neural TTS + SAPI Fallback | **Deployed & Verified** |
+| **Dynamic Model Verification** | Pre-command Gemini Model Probing & Selection | **Deployed & Verified** |
 | **Overall Project Completion** | Standalone Single Binary & Creative Mastery | **100% Completed** |
-| **User-Testing Readiness** | Standalone Executable & GUI Ready | **Ready for Local Testing** |
+| **User-Testing Readiness** | Diagnostic Monitor & Executable Ready | **Ready for Live Testing** |
 
 ---
 
@@ -47,6 +49,7 @@
 | **Phase 14**| HeyClicky Visual Target Beacon & Skill Inventory Expansion | Done | 1 Session | 2026-10-07 |
 | **Phase 15**| UI/UX Design System Elevation & Dynamic HUD Grounding | Done | 1 Session | 2026-10-07 |
 | **Phase 16**| AI Cliché & Emoji Purge (Hacker / Hobbyist Standard) | Done | 1 Session | 2026-10-07 |
+| **Phase 17**| Persistent File Logging, Real-time Input Correlation, Neural Assistant Voice & Dynamic Gemini Models | Done | 1 Session | 2026-10-07 |
 
 ---
 

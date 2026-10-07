@@ -1,7 +1,7 @@
 """
 Wake-Word Detection Engine for Ikkhi.
-Listens continuously for trigger phrases ("hey ikkhi", "ikkhi", etc.)
-utilizing openWakeWord ONNX models and acoustic speech activity detection with <1% CPU footprint.
+Listens continuously for trigger phrases ("hey ikkhi", "hey ikki", "hey siri", "hey google", "jarvis", etc.)
+utilizing dynamic ambient noise calibration and fast CUDA transcription with <1% CPU footprint.
 """
 
 import time
@@ -14,8 +14,9 @@ import sounddevice as sd
 
 from ikkhi.core.config import AudioSettings
 from ikkhi.audio.stt import WhisperSTTEngine
+from ikkhi.audio.capture import resolve_optimal_input_device
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("ikkhi.audio.wakeword")
 
 
 class WakeWordListener:
@@ -24,10 +25,18 @@ class WakeWordListener:
     incoming microphone frames for activation wake words.
     """
 
+    # Extended phonetic variations and common assistant triggers for natural invocation
+    WAKE_KEYWORDS = [
+        "hey ikkhi", "hey ikki", "hey eki", "hey iki", "hey ikhi",
+        "hey iggy", "hey itchy", "hey cookie", "hey key", "hey, ikkhi", "hey, ikki",
+        "ikkhi", "ikki", "ickey", "iki", "ikhi", "hi ikkhi", "hi ikki",
+        "hey assistant", "assistant", "hey siri", "hey google", "hey jarvis", "jarvis", "computer"
+    ]
+
     def __init__(
         self,
         settings: AudioSettings,
-        on_wake: Callable[[str, Optional[str]], None], # on_wake(trigger_name, optional_command)
+        on_wake: Callable[[str, Optional[str]], None],  # on_wake(trigger_name, optional_command)
         stt_engine: Optional[WhisperSTTEngine] = None,
         threshold: float = 0.5,
     ) -> None:
@@ -40,31 +49,8 @@ class WakeWordListener:
 
         self._running = False
         self._thread: Optional[threading.Thread] = None
-        self._audio_queue: queue.Queue[np.ndarray] = queue.Queue(maxsize=150)
+        self._audio_queue: queue.Queue[np.ndarray] = queue.Queue(maxsize=200)
         self._stream: Optional[sd.InputStream] = None
-        self._oww_model = None
-
-        self._init_oww_models()
-
-    def _init_oww_models(self) -> None:
-        """Initialize openWakeWord ONNX models if available."""
-        try:
-            import openwakeword
-            from openwakeword.model import Model
-
-            model_paths = [
-                p for p in openwakeword.get_pretrained_model_paths()
-                if p.endswith(".onnx")
-            ]
-            if model_paths:
-                self._oww_model = Model(
-                    wakeword_models=model_paths,
-                    inference_framework="onnx"
-                )
-                logger.info("Loaded openWakeWord ONNX models: %s", list(self._oww_model.models.keys()))
-        except Exception as exc:
-            logger.debug("openWakeWord ONNX initialization: %s", exc)
-            self._oww_model = None
 
     def _audio_callback(self, indata: np.ndarray, frames: int, time_info, status) -> None:
         """Real-time audio callback collecting 16kHz mono chunks."""
@@ -82,27 +68,27 @@ class WakeWordListener:
             return
 
         self._running = True
-        dev_idx = getattr(self.settings, "input_device", None)
-        if dev_idx is not None and isinstance(dev_idx, str):
-            try:
-                dev_idx = int(dev_idx)
-            except ValueError:
-                pass
+        dev_idx = resolve_optimal_input_device(getattr(self.settings, "input_device", None))
 
         # Block size of 1280 samples = 80ms at 16kHz
-        self._stream = sd.InputStream(
-            device=dev_idx,
-            samplerate=self.sample_rate,
-            channels=1,
-            dtype="int16",
-            blocksize=1280,
-            callback=self._audio_callback
-        )
-        self._stream.start()
+        try:
+            self._stream = sd.InputStream(
+                device=dev_idx,
+                samplerate=self.sample_rate,
+                channels=1,
+                dtype="int16",
+                blocksize=1280,
+                callback=self._audio_callback
+            )
+            self._stream.start()
+        except Exception as exc:
+            logger.error("Failed to start wake-word audio stream: %s", exc)
+            self._running = False
+            return
 
         self._thread = threading.Thread(target=self._worker_loop, daemon=True, name="Ikkhi-WakeWord-Thread")
         self._thread.start()
-        logger.info("WakeWordListener activated for phrase: '%s'", self.target_phrase)
+        logger.info("WakeWordListener activated on device [%s] for phrases: %s", dev_idx, self.WAKE_KEYWORDS[:4])
 
     def stop(self) -> None:
         """Cleanly terminate worker and physical input audio stream."""
@@ -123,10 +109,13 @@ class WakeWordListener:
     def _worker_loop(self) -> None:
         """Inference loop consuming chunks and evaluating wake models."""
         speech_buffer: List[np.ndarray] = []
-        silence_threshold = 180.0  # Increased sensitivity for desktop microphones
         silence_chunks = 0
         is_in_speech = False
         cooldown_until = 0.0
+
+        # Dynamic noise floor calibration
+        noise_samples: List[float] = []
+        noise_floor = 120.0
 
         while self._running:
             try:
@@ -139,29 +128,24 @@ class WakeWordListener:
                 speech_buffer.clear()
                 continue
 
-            # 1. Quick openWakeWord check
-            if self._oww_model is not None:
-                try:
-                    preds = self._oww_model.predict(chunk)
-                    for model_name, score in preds.items():
-                        if score >= self.threshold:
-                            logger.info("Wake word detected by OWW model [%s] (score=%.2f)", model_name, score)
-                            cooldown_until = now + 2.5
-                            self.on_wake(model_name, None)
-                            speech_buffer.clear()
-                            break
-                except Exception:
-                    pass
-
-            # 2. Acoustic Speech & Custom "Hey Ikkhi" Spotting
             rms = float(np.sqrt(np.mean(np.square(chunk.astype(np.float32)))))
 
-            if rms >= silence_threshold:
+            # Calibrate initial background noise
+            if len(noise_samples) < 15:
+                noise_samples.append(rms)
+                if len(noise_samples) == 15:
+                    noise_floor = max(80.0, float(np.mean(noise_samples)) * 1.6)
+                    logger.debug("WakeWord noise floor calibrated to: %.2f", noise_floor)
+                continue
+
+            speech_trigger = noise_floor
+
+            if rms >= speech_trigger:
                 # Active speech chunk
                 is_in_speech = True
                 silence_chunks = 0
                 speech_buffer.append(chunk)
-                # Keep buffer capped to 4 seconds maximum
+                # Keep buffer capped to 4 seconds maximum (50 chunks x 80ms)
                 if len(speech_buffer) > 50:
                     speech_buffer.pop(0)
             else:
@@ -170,12 +154,11 @@ class WakeWordListener:
                     silence_chunks += 1
                     speech_buffer.append(chunk)
 
-                    # After ~240ms of trailing silence (3 chunks * 80ms) and at least 0.4s of speech (5 chunks)
-                    if silence_chunks >= 3 and len(speech_buffer) >= 5:
+                    # Trigger evaluation after ~240ms of trailing silence (3 chunks) and at least ~320ms of speech (4 chunks)
+                    if silence_chunks >= 3 and len(speech_buffer) >= 4:
                         is_in_speech = False
                         silence_chunks = 0
-                        
-                        # Process buffered speech for "Hey Ikkhi"
+
                         if self.stt_engine is not None:
                             full_int16 = np.concatenate(speech_buffer, axis=0)
                             float32_audio = full_int16.astype(np.float32) / 32768.0
@@ -184,27 +167,22 @@ class WakeWordListener:
                             try:
                                 transcript, _ = self.stt_engine.transcribe(float32_audio)
                                 clean = transcript.lower().strip()
-                                logger.info("Mic input heard: '%s'", clean)
+                                if clean:
+                                    logger.debug("Ambient mic heard: '%s'", clean)
 
-                                # Check for phonetic variants of "Hey Ikkhi"
-                                wake_keywords = [
-                                    "hey ikkhi", "hey ikki", "hey eki", "hey iki", "hey ikhi",
-                                    "hey iggy", "hey itchy", "hey nicki", "hey mickey", "hey cookie",
-                                    "ikkhi", "ikki", "ickey", "iki", "ikhi", "hi ikkhi",
-                                    "hey key", "hey, ikkhi", "hey, ikki"
-                                ]
+                                # Check against all phonetic variations of wake triggers
                                 matched_kw = None
-                                for kw in wake_keywords:
+                                for kw in self.WAKE_KEYWORDS:
                                     if kw in clean:
                                         matched_kw = kw
                                         break
 
                                 if matched_kw:
-                                    logger.info("Custom wake-word matched: '%s' in transcript: '%s'", matched_kw, clean)
+                                    logger.info("Wake-word matched: '%s' in transcript: '%s'", matched_kw, clean)
                                     cooldown_until = now + 2.5
                                     # Extract remainder command if uttered in same sentence
                                     remainder = clean.split(matched_kw, 1)[-1].strip(" ,.!?")
-                                    self.on_wake("hey ikkhi", remainder if remainder else None)
+                                    self.on_wake(matched_kw, remainder if remainder else None)
                             except Exception as exc:
                                 logger.debug("Wake verification transcribe error: %s", exc)
                         else:

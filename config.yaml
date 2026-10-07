@@ -20,11 +20,16 @@ audio:
   whisper_model: "base.en"
   whisper_device: "cuda" # "cuda" (for NVIDIA RTX) or "cpu"
   compute_type: "float16" # or "int8" for CPU
+  # Natural Voice Synthesis (Google Assistant / Neural Assistant style)
+  tts_engine: "neural" # "neural" (natural edge-tts) or "sapi" (legacy offline)
+  tts_voice: "en-US-AvaNeural" # Ava or Aria sounds like Google Assistant
+  input_device: 24 # Microphone (Realtek HD Audio Mic input)
 
 ai_tier:
   # Google AI Studio settings (strictly on-demand)
   enable_cloud_fallback: true
-  model_name: "gemini-2.0-flash"
+  model_name: "gemini-2.5-flash"
+  auto_select_model: true # Query API first to verify model availability before commanding
   max_output_tokens: 350
   temperature: 0.1
 

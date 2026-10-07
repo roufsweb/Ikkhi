@@ -46,6 +46,8 @@ hidden_imports = [
 hidden_imports += collect_submodules('ikkhi')
 hidden_imports += collect_submodules('sounddevice')
 hidden_imports += collect_submodules('faster_whisper')
+hidden_imports += collect_submodules('edge_tts')
+hidden_imports += collect_submodules('av')
 
 # Collect data files
 datas = [
@@ -54,10 +56,11 @@ datas = [
 datas += collect_data_files('faster_whisper')
 datas += collect_data_files('sounddevice')
 
-# Collect dynamic libraries / DLLs (e.g. portaudio, ctranslate2)
+# Collect dynamic libraries / DLLs (e.g. portaudio, ctranslate2, av)
 binaries = []
 binaries += collect_dynamic_libs('sounddevice')
 binaries += collect_dynamic_libs('ctranslate2')
+binaries += collect_dynamic_libs('av')
 
 a = Analysis(
     ['src/ikkhi/__main__.py'],

@@ -29,6 +29,9 @@ class IkkhiApplication:
     def __init__(self, config: Optional[AppConfig] = None) -> None:
         self.config = config or AppConfig.load_from_yaml("config.yaml")
 
+        from ikkhi.core.logger import setup_logging
+        setup_logging(debug=self.config.system.debug)
+
         # Initialize Qt Application instance if not already running
         self.app = QApplication.instance()
         if self.app is None:

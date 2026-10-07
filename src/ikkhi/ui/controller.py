@@ -1,6 +1,7 @@
 """
 Asynchronous Controller & Worker Pipeline for Ikkhi Desktop GUI.
 Bridges Push-to-Talk events, audio capture, Whisper CUDA inference, and UI state signals.
+Provides comprehensive user interaction correlation tracking across Windows.
 """
 
 import time
@@ -12,6 +13,7 @@ from PyQt6.QtCore import QObject, QThread, pyqtSignal, pyqtSlot, QTimer
 
 from ikkhi.core.config import AppConfig
 from ikkhi.core.orchestrator import IkkhiOrchestrator
+from ikkhi.core.logger import InputCorrelationTracker, get_logger
 from ikkhi.audio.capture import AudioCaptureEngine
 from ikkhi.audio.stt import WhisperSTTEngine
 from ikkhi.audio.hotkey import PushToTalkListener
@@ -26,8 +28,8 @@ class AudioInferenceWorker(QThread):
     Ensures the GUI event loop maintains an uncompromised 60 FPS without frame drops.
     """
 
-    inference_completed = pyqtSignal(str, str, str)  # (transcript, tier, response)
-    inference_failed = pyqtSignal(str)              # (error_message)
+    inference_completed = pyqtSignal(str, str, str, float)  # (transcript, tier, response, elapsed_s)
+    inference_failed = pyqtSignal(str)                     # (error_message)
 
     def __init__(self, stt_engine: WhisperSTTEngine, orchestrator: IkkhiOrchestrator, audio: np.ndarray) -> None:
         super().__init__()
@@ -36,9 +38,11 @@ class AudioInferenceWorker(QThread):
         self.audio = audio
 
     def run(self) -> None:
+        start_t = time.time()
         try:
             transcript, _ = self.stt_engine.transcribe(self.audio)
             transcript_clean = transcript.strip()
+            elapsed_s = time.time() - start_t
             if not transcript_clean:
                 self.inference_failed.emit("No audible speech detected")
                 return
@@ -49,7 +53,7 @@ class AudioInferenceWorker(QThread):
 
             # Execute intent via orchestrator
             response = self.orchestrator.process_transcript(transcript_clean)
-            self.inference_completed.emit(transcript_clean, tier_name, response)
+            self.inference_completed.emit(transcript_clean, tier_name, response, elapsed_s)
         except Exception as exc:
             logger.error("Inference worker encountered an error: %s", exc)
             self.inference_failed.emit(str(exc))
@@ -74,9 +78,12 @@ class GUIController(QObject):
         self.orchestrator = IkkhiOrchestrator(config)
         self.capture_engine = AudioCaptureEngine(config.audio)
         self.stt_engine = WhisperSTTEngine(config.audio, config.network)
-        
+        self.tracker = InputCorrelationTracker()
+
         self._is_muted = False
         self._active_worker: Optional[AudioInferenceWorker] = None
+        self._last_context_app = ""
+        self._recording_start_time = 0.0
 
         # Real-time RMS polling timer for audio waveform visualizer (40 FPS)
         self._rms_timer = QTimer(self)
@@ -88,11 +95,12 @@ class GUIController(QObject):
         self._context_timer.setInterval(1000)
         self._context_timer.timeout.connect(self._poll_active_context)
 
-        # Setup Push-to-Talk global keyboard listener
+        # Setup Push-to-Talk global keyboard listener with input tracker
         self.hotkey_listener = PushToTalkListener(
             settings=config.audio,
             on_start=self._on_hotkey_pressed,
-            on_stop=self._on_hotkey_released
+            on_stop=self._on_hotkey_released,
+            tracker=self.tracker
         )
 
         # Setup Wake-Word listener
@@ -150,6 +158,10 @@ class GUIController(QObject):
     def _poll_active_context(self) -> None:
         """Query host OS for currently focused foreground application."""
         app_name = self.get_foreground_app_name()
+        if app_name != self._last_context_app:
+            if self._last_context_app:
+                self.tracker.log_window_change(self._last_context_app, app_name)
+            self._last_context_app = app_name
         self.context_changed.emit(app_name)
 
     @staticmethod
@@ -207,7 +219,9 @@ class GUIController(QObject):
             self.execute_simulated_command(optional_command)
         else:
             self.state_changed.emit("listening", "Wake word recognized! Listening...")
-            # Automatically record speech command for 3.5 seconds with live waveform animation
+            self._recording_start_time = time.time()
+            dev_name = str(self.config.audio.input_device or "Default Windows Audio Device")
+            self.tracker.log_audio_capture("START", dev_name, 0.0)
             self.capture_engine.start_recording()
             self._rms_timer.start()
             QTimer.singleShot(3500, self._on_hotkey_released)
@@ -218,13 +232,16 @@ class GUIController(QObject):
         if muted:
             self.state_changed.emit("idle", "Microphone Hook Muted")
         else:
-            self.state_changed.emit("idle", "Hold Ctrl+Alt+Space to speak")
+            self.state_changed.emit("idle", f"Hold {self.config.audio.push_to_talk_key.upper()} to speak")
 
     def _on_hotkey_pressed(self) -> None:
         if self._is_muted:
             return
 
         self.state_changed.emit("listening", "Listening to microphone...")
+        self._recording_start_time = time.time()
+        dev_name = str(self.config.audio.input_device or "Default Windows Audio Device")
+        self.tracker.log_audio_capture("START", dev_name, 0.0)
         self.capture_engine.start_recording()
         self._rms_timer.start()
 
@@ -237,6 +254,10 @@ class GUIController(QObject):
         self.state_changed.emit("processing", "Transcribing speech on CUDA...")
         audio_buffer = self.capture_engine.stop_recording()
 
+        duration = max(0.0, time.time() - self._recording_start_time)
+        rms = float(np.sqrt(np.mean(audio_buffer**2))) if len(audio_buffer) > 0 else 0.0
+        self.tracker.log_audio_capture("STOP", "Active", rms, duration)
+
         if len(audio_buffer) == 0:
             self.state_changed.emit("idle", "No audio recorded")
             return
@@ -247,25 +268,33 @@ class GUIController(QObject):
         self._active_worker.inference_failed.connect(self._handle_inference_failure)
         self._active_worker.start()
 
-    @pyqtSlot(str, str, str)
-    def _handle_inference_success(self, transcript: str, tier: str, response: str) -> None:
+    @pyqtSlot(str, str, str, float)
+    def _handle_inference_success(self, transcript: str, tier: str, response: str, elapsed: float) -> None:
         now_str = datetime.now().strftime("%H:%M:%S")
+        self.tracker.log_transcription(transcript, elapsed, f"faster-whisper [{self.config.audio.whisper_model}]")
+        self.tracker.log_action_execution(transcript, tier, response, elapsed)
+
         self.state_changed.emit("speaking", f'"{transcript}" → {response}')
         self.tier_dispatched.emit(tier)
         self.command_logged.emit(now_str, transcript, tier, response)
 
     @pyqtSlot(str)
     def _handle_inference_failure(self, error_msg: str) -> None:
+        self.tracker.log_transcription("", 0.0, f"faster-whisper [{self.config.audio.whisper_model}]")
         self.state_changed.emit("idle", f"Notice: {error_msg}")
 
     def execute_simulated_command(self, command_text: str) -> str:
         """Simulate programmatic voice command execution for automated diagnostics."""
+        start_t = time.time()
         now_str = datetime.now().strftime("%H:%M:%S")
         route = self.orchestrator.router.route(command_text)
         tier_name = "Tier 0 (Local Deterministic)" if not route.is_cloud_request else "Tier 1 (Cloud Multimodal)"
 
         self.state_changed.emit("processing", f"Executing: {command_text}")
         response = self.orchestrator.process_transcript(command_text)
+        elapsed = time.time() - start_t
+
+        self.tracker.log_action_execution(command_text, tier_name, response, elapsed)
         self.state_changed.emit("speaking", response)
         self.tier_dispatched.emit(tier_name)
         self.command_logged.emit(now_str, command_text, tier_name, response)

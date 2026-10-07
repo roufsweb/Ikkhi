@@ -1,6 +1,7 @@
 """
 Global Asynchronous Push-to-Talk Hotkey Subsystem.
 Hooks hardware keyboard interrupts across Windows with 0.0% idle CPU overhead.
+Correlates every user key action with Ikkhi's activation state.
 """
 
 import threading
@@ -8,8 +9,9 @@ import logging
 from typing import Callable, Optional, Set
 from pynput import keyboard
 from ikkhi.core.config import AudioSettings
+from ikkhi.core.logger import InputCorrelationTracker
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("ikkhi.audio.hotkey")
 
 
 class PushToTalkListener:
@@ -19,7 +21,8 @@ class PushToTalkListener:
         self,
         settings: AudioSettings,
         on_start: Optional[Callable[[], None]] = None,
-        on_stop: Optional[Callable[[], None]] = None
+        on_stop: Optional[Callable[[], None]] = None,
+        tracker: Optional[InputCorrelationTracker] = None
     ) -> None:
         self.settings = settings
         self.on_start = on_start
@@ -29,6 +32,7 @@ class PushToTalkListener:
         self._listener: Optional[keyboard.Listener] = None
         self._running = False
         self._lock = threading.Lock()
+        self.tracker = tracker or InputCorrelationTracker(logger)
 
     def _normalize_key(self, key: keyboard.Key | keyboard.KeyCode) -> str:
         """Converts pynput key representation to normalized lowercase token."""
@@ -55,9 +59,15 @@ class PushToTalkListener:
     def _on_press(self, key: keyboard.Key | keyboard.KeyCode) -> None:
         with self._lock:
             self._current_keys.add(key)
+            norm_key = self._normalize_key(key)
+            active_tokens = {self._normalize_key(k) for k in self._current_keys}
+            
+            # Log hardware input and its relation to Ikkhi
+            self.tracker.log_key_event("press", norm_key, active_tokens, self.settings.push_to_talk_key)
+
             if not self._is_active and self._check_hotkey_match():
                 self._is_active = True
-                logger.info("Push-to-Talk hotkey engaged: recording initiated.")
+                logger.info("Push-to-Talk hotkey matched: recording initiated.")
                 if self.on_start:
                     try:
                         self.on_start()
@@ -66,6 +76,10 @@ class PushToTalkListener:
 
     def _on_release(self, key: keyboard.Key | keyboard.KeyCode) -> None:
         with self._lock:
+            norm_key = self._normalize_key(key)
+            active_tokens = {self._normalize_key(k) for k in self._current_keys}
+            self.tracker.log_key_event("release", norm_key, active_tokens, self.settings.push_to_talk_key)
+
             if self._is_active and not self._check_hotkey_match():
                 self._is_active = False
                 logger.info("Push-to-Talk hotkey released: recording finalized.")

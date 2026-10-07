@@ -148,3 +148,13 @@
   - Authored File Management & Organizing AI Skill protocol in `.agents/skills/ikkhi-files/SKILL.md` (directory taxonomy, anti-clutter routine, path resolution invariants).
   - Expanded automated test suite to **47/47 tests passing (100% pass rate)** including `test_cursor_target_beacon`.
   - Synchronized Master Project Map (`PROJECT_MAP.md`), `PROGRESS.md`, and `CONTEXT.md`.
+- **Persistent File Logging, Input Correlation Engine, Google Assistant-Style Neural Voice & Dynamic Gemini Models (Phase 17):**
+  - **Persistent Rotating File Logging (`src/ikkhi/core/logger.py`):** Configured dual-output console + rotating file handler writing to `storage/ikkhi.log` (10MB x 5 backups) capturing all system, hardware, and runtime events.
+  - **Comprehensive Computer User Input Logging & Correlation:** Built `InputCorrelationTracker` hooked into global keyboard hooks (`pynput`), active window transitions (`win32gui`), and audio capture RMS. Correlates every key press/release against Ikkhi's push-to-talk trigger (`ctrl+alt+space`), records active foreground applications, and traces intent dispatch to action results.
+  - **Google Assistant-Style Neural Voice (`src/ikkhi/audio/tts.py`):** Replaced robotic legacy Windows SAPI 5 with Microsoft Edge Neural TTS (`en-US-AvaNeural` / `en-US-AriaNeural`), decoded directly in-memory via PyAV to PCM float32 and played with zero disk latency via `sounddevice`. Retained offline SAPI 5 as seamless fallback.
+  - **Dynamic Gemini Model Availability Verification (`src/ikkhi/ai/gemini.py`):** Implemented dynamic model querying via `client.models.list()`. Validates model existence before commanding generation, auto-resolving to verified active flash vision models (e.g. `gemini-2.5-flash`).
+  - **Path Resolution Bugfix (`src/ikkhi/core/paths.py`):** Fixed 3-parent to 4-parent calculation so repository root and `storage/` resolve correctly to project root instead of `src/storage/`.
+  - **Interactive Diagnostic Suite (`scripts/diagnose_interactions.py`):** Created a live terminal tool analyzing input audio devices (detecting silent VB-Audio Virtual Cable vs physical Realtek/Bluetooth mics), verifying neural TTS, listing 62 available Gemini models, and providing an interactive live input correlation table.
+  - **Automated Test Expansion:** Expanded test suite from 47 to **53 of 53 tests passing (100% pass rate)**.
+  - **Documentation Sync:** Updated `CONTEXT.md`, `PROGRESS.md`, `PROJECT_MAP.md`, and `CONVERSATION_SUMMARY.md`.
+

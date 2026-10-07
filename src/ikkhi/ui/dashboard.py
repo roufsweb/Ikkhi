@@ -263,6 +263,44 @@ class DashboardWindow(QMainWindow):
         row3.addWidget(self.combo_device)
         layout.addLayout(row3)
 
+        # Voice Synthesis Engine & Voice
+        row_voice = QHBoxLayout()
+        lbl_voice = QLabel("Voice Engine & Style:", widget)
+        lbl_voice.setFixedWidth(160)
+        self.combo_voice = QComboBox(widget)
+        self.combo_voice.addItem("en-US-AvaNeural (Google Assistant style)", "en-US-AvaNeural")
+        self.combo_voice.addItem("en-US-AriaNeural (Conversational)", "en-US-AriaNeural")
+        self.combo_voice.addItem("en-US-JennyNeural (Natural Warm)", "en-US-JennyNeural")
+        self.combo_voice.addItem("en-US-GuyNeural (Male Natural)", "en-US-GuyNeural")
+        self.combo_voice.addItem("SAPI 5 (Legacy Offline Windows)", "sapi")
+
+        current_voice = getattr(self.config.audio, "tts_voice", "en-US-AvaNeural")
+        for i in range(self.combo_voice.count()):
+            if self.combo_voice.itemData(i) == current_voice:
+                self.combo_voice.setCurrentIndex(i)
+                break
+        row_voice.addWidget(lbl_voice)
+        row_voice.addWidget(self.combo_voice)
+        layout.addLayout(row_voice)
+
+        # Gemini Model
+        row_model = QHBoxLayout()
+        lbl_model = QLabel("Gemini Model:", widget)
+        lbl_model.setFixedWidth(160)
+        self.combo_gemini_model = QComboBox(widget)
+        self.combo_gemini_model.addItem("gemini-2.5-flash (Fast Vision - Verified)", "gemini-2.5-flash")
+        self.combo_gemini_model.addItem("gemini-flash-latest (Auto Latest)", "gemini-flash-latest")
+        self.combo_gemini_model.addItem("gemini-2.5-flash-lite (Ultra Fast)", "gemini-2.5-flash-lite")
+        self.combo_gemini_model.addItem("gemini-3.5-flash (Next-Gen)", "gemini-3.5-flash")
+        current_model = getattr(self.config.ai_tier, "model_name", "gemini-2.5-flash")
+        for i in range(self.combo_gemini_model.count()):
+            if self.combo_gemini_model.itemData(i) == current_model:
+                self.combo_gemini_model.setCurrentIndex(i)
+                break
+        row_model.addWidget(lbl_model)
+        row_model.addWidget(self.combo_gemini_model)
+        layout.addLayout(row_model)
+
         # Gemini API Key
         row4 = QHBoxLayout()
         lbl4 = QLabel("Gemini API Key:", widget)
@@ -328,6 +366,15 @@ class DashboardWindow(QMainWindow):
         self.config.audio.wake_word = self.input_wakeword.text().strip().lower()
         self.config.audio.whisper_model = self.combo_whisper.currentText()
         self.config.audio.whisper_device = self.combo_device.currentText()
+
+        selected_voice = self.combo_voice.currentData()
+        if selected_voice == "sapi":
+            self.config.audio.tts_engine = "sapi"
+        else:
+            self.config.audio.tts_engine = "neural"
+            self.config.audio.tts_voice = selected_voice
+
+        self.config.ai_tier.model_name = self.combo_gemini_model.currentData() or "gemini-2.5-flash"
         self.config.ai_tier.gemini_api_key = self.input_apikey.text().strip()
         self.config.ai_tier.gemini_project_id = self.input_project_id.text().strip()
         self.config.network.proxy = self.input_proxy.text().strip()

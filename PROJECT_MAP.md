@@ -44,6 +44,7 @@ e:/rouf/software-project/Ikkhi/
 │       │   ├── __init__.py
 │       │   ├── config.py                   # Pydantic Settings & dynamic .env secret loader
 │       │   ├── exceptions.py               # Domain-specific typed exception hierarchy
+│       │   ├── logger.py                   # Rotating file logger & user interaction correlation tracker
 │       │   ├── paths.py                    # Frozen PyInstaller bundle & persistent path resolver
 │       │   ├── router.py                   # High-throughput Tier 0 vs Tier 1 intent classifier
 │       │   └── orchestrator.py             # Event coordinator & execution dispatcher
@@ -51,10 +52,15 @@ e:/rouf/software-project/Ikkhi/
 │       ├── audio/                          # Acoustic capture, neural STT, TTS & wake-word
 │       │   ├── __init__.py
 │       │   ├── capture.py                  # Zero-copy 16kHz audio buffer capture (sounddevice)
-│       │   ├── hotkey.py                   # Global asynchronous push-to-talk listener (pynput)
+│       │   ├── hotkey.py                   # Global push-to-talk listener & user key tracker (pynput)
 │       │   ├── stt.py                      # Local faster-whisper CUDA GPU transcription engine
-│       │   ├── tts.py                      # 100% offline local Win32 SAPI speech synthesis
-│       │   └── wakeword.py                 # Low-overhead acoustic wake-word spotter ("Hey Ikkhi")
+│       │   ├── tts.py                      # Natural Edge Neural TTS (Google Assistant style) + SAPI
+│       │   └── wakeword.py                 # Low-overhead acoustic wake-word spotter (Hey Ikkhi / Siri / Google)
+│       │
+│       ├── ai/                             # Dynamic model discovery, reasoned selection & fallback
+│       │   ├── __init__.py
+│       │   ├── router_model.py             # Reasoned Model Orchestrator & multi-model fallback chain
+│       │   └── gemini.py                   # On-demand Google AI Studio multimodal vision grounding client
 │       │
 │       ├── vision/                         # Multi-monitor management, screen indexing & cursor
 │       │   ├── __init__.py
@@ -214,6 +220,13 @@ e:/rouf/software-project/Ikkhi/
 - **Key Interfaces:** `is_frozen()`, `get_bundle_dir()`, `get_storage_dir()`, `get_profiles_dir()`, `resolve_config_path()`.
 - **Resource Profile:** In-memory string/path operations (<0.1ms).
 
+#### [`src/ikkhi/core/logger.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/core/logger.py)
+- **Job / Core Duty:** Dual-output logging engine (console + persistent rotating `storage/ikkhi.log`) and real-time user input correlation tracking.
+- **Inbound Connections:** `__main__.py`, `app.py`, `controller.py`, `hotkey.py`, `diagnose_interactions.py`, `test_logger.py`.
+- **Outbound Connections:** `logging`, `logging.handlers.RotatingFileHandler`, `paths.get_storage_dir()`.
+- **Key Interfaces:** `setup_logging()`, `get_logger()`, `close_logging()`, `InputCorrelationTracker` (`log_key_event`, `log_window_change`, `log_audio_capture`, `log_transcription`, `log_action_execution`).
+- **Resource Profile:** Zero-overhead file rotation (10MB x 5 backups, sub-millisecond writes).
+
 #### [`src/ikkhi/core/exceptions.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/core/exceptions.py)
 - **Job / Core Duty:** Domain-specific typed exception classes ensuring consistent error handling and diagnostic reporting across all subsystems.
 - **Inbound Connections:** `capture.py`, `stt.py`, `tts.py`, `inspector.py`, `profiles.py`, `universal.py`.
@@ -271,11 +284,32 @@ e:/rouf/software-project/Ikkhi/
 - **Resource Profile:** Native OS COM object (<15ms latency, 0 tokens, $0.00).
 
 #### [`src/ikkhi/audio/wakeword.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/audio/wakeword.py)
-- **Job / Core Duty:** Continuous background acoustic wake-word listener scanning for "Hey Ikkhi" and phonetic variants using RMS energy gating and acoustic verification with <1% CPU footprint.
+- **Job / Core Duty:** Continuous background acoustic wake-word listener scanning for "Hey Ikkhi" and assistant phrases (Hey Siri, Hey Google, Jarvis) using adaptive noise calibration and physical mic auto-detection.
 - **Inbound Connections:** `controller.py`, `__main__.py`, `test_live_wakeword.py`.
-- **Outbound Connections:** `sounddevice`, `numpy`, `src/ikkhi/audio/stt.py`.
+- **Outbound Connections:** `sounddevice`, `numpy`, `src/ikkhi/audio/stt.py`, `src/ikkhi/audio/capture.py`.
 - **Key Interfaces:** `WakeWordListener`, `start()`, `stop()`, `trigger_manual(phrase: str)`.
 - **Resource Profile:** Low-power acoustic stream (<1.0% CPU idle).
+
+---
+
+### `src/ikkhi/ai/` — Model Orchestration, Reasoned Selection & Cloud Fallback
+- **Domain / Job:** Dynamic AI model discovery, prompt-characteristic reasoning, multi-model fallback execution, and multimodal visual screen grounding.
+- **Parent / Inbound Callers:** `orchestrator.py`, `test_gemini_models.py`, `diagnose_interactions.py`.
+- **Submodules & Children:** `router_model.py`, `gemini.py`.
+
+#### [`src/ikkhi/ai/router_model.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/ai/router_model.py)
+- **Job / Core Duty:** Inspects 46+ active generative models on Google AI Studio, reasons about prompt requirements (vision vs deep analytical logic vs conversational speed), and walks an automated fallback chain.
+- **Inbound Connections:** `gemini.py`, `test_gemini_models.py`, `diagnose_interactions.py`.
+- **Outbound Connections:** `google.genai`, `google.genai.types`.
+- **Key Interfaces:** `ReasonedModelOrchestrator`, `ModelInfo`, `list_available_models()`, `select_reasoned_model()`, `generate_with_fallback()`.
+- **Resource Profile:** Dynamic API query with persistent local caching (<0.2s).
+
+#### [`src/ikkhi/ai/gemini.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/ai/gemini.py)
+- **Job / Core Duty:** Credit-budgeted visual grounding client for ambiguous UI queries; converts downsampled screen crops into normalized click coordinates.
+- **Inbound Connections:** `orchestrator.py`, `test_gemini_models.py`.
+- **Outbound Connections:** `src/ikkhi/ai/router_model.py`, `src/ikkhi/vision/indexer.py`.
+- **Key Interfaces:** `GeminiVisualClient`, `VisualQueryResult`, `query_visual_target()`, `get_available_models()`, `resolve_active_model()`.
+- **Resource Profile:** Strictly capped on-demand token consumption (max 350 output tokens).
 
 ---
 

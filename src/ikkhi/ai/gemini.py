@@ -1,21 +1,28 @@
 """
 Credit-optimized Google AI Studio (Gemini) client for visual grounding and conversational fallback.
+Integrates ReasonedModelOrchestrator for dynamic model discovery, task-aware reasoned selection,
+and resilient multi-model fallback execution.
 """
 
 import json
+import logging
 from dataclasses import dataclass
-from typing import Optional, Tuple
-from google import genai
+from typing import Optional, Tuple, List
 from google.genai import types
 from ikkhi.core.config import AITierSettings
 from ikkhi.vision.indexer import IndexedScreen
+from ikkhi.ai.router_model import ReasonedModelOrchestrator, ModelInfo
+
+logger = logging.getLogger("ikkhi.ai.gemini")
 
 
 @dataclass
 class VisualQueryResult:
     target_found: bool
-    coordinates: Optional[Tuple[float, float]] # (norm_x, norm_y) 0.0 to 1.0 within window crop
+    coordinates: Optional[Tuple[float, float]]  # (norm_x, norm_y) 0.0 to 1.0 within window crop
     response_text: str
+    used_model: Optional[str] = None
+    reasoning: Optional[str] = None
 
 
 class GeminiVisualClient:
@@ -36,13 +43,29 @@ class GeminiVisualClient:
 
     def __init__(self, settings: AITierSettings) -> None:
         self.settings = settings
-        self.client: Optional[genai.Client] = None
-        if self.settings.gemini_api_key:
-            self.client = genai.Client(api_key=self.settings.gemini_api_key)
+        self.orchestrator = ReasonedModelOrchestrator(api_key=settings.gemini_api_key)
+
+    @property
+    def client(self):
+        return self.orchestrator.client
+
+    def get_available_models(self, force_refresh: bool = False) -> List[str]:
+        """Returns list of active generative model IDs discovered on Google AI Studio."""
+        models = self.orchestrator.list_available_models(force_refresh=force_refresh)
+        return [m.name for m in models]
+
+    def resolve_active_model(self) -> str:
+        """Resolves the preferred or reasoned model."""
+        chosen, _, _ = self.orchestrator.select_reasoned_model(
+            user_prompt="",
+            has_image=True,
+            preferred_model=self.settings.model_name
+        )
+        return chosen
 
     def query_visual_target(self, user_prompt: str, screen: IndexedScreen) -> VisualQueryResult:
-        """Sends compressed screen crop to Gemini with strict token limits."""
-        if not self.client:
+        """Sends compressed screen crop to Gemini with strict token limits, task reasoning, and fallback."""
+        if not self.orchestrator.client:
             return VisualQueryResult(
                 target_found=False,
                 coordinates=None,
@@ -54,15 +77,16 @@ class GeminiVisualClient:
                 data=screen.image_bytes,
                 mime_type=screen.mime_type
             )
-            response = self.client.models.generate_content(
-                model=self.settings.model_name,
+
+            response, used_model, reasoning = self.orchestrator.generate_with_fallback(
                 contents=[image_part, user_prompt],
-                config=types.GenerateContentConfig(
-                    system_instruction=self.SYSTEM_INSTRUCTION,
-                    temperature=self.settings.temperature,
-                    max_output_tokens=self.settings.max_output_tokens,
-                    response_mime_type="application/json"
-                )
+                system_instruction=self.SYSTEM_INSTRUCTION,
+                temperature=self.settings.temperature,
+                max_output_tokens=self.settings.max_output_tokens,
+                response_mime_type="application/json",
+                user_prompt=user_prompt,
+                has_image=True,
+                preferred_model=self.settings.model_name
             )
 
             result_json = json.loads(response.text)
@@ -74,7 +98,9 @@ class GeminiVisualClient:
             return VisualQueryResult(
                 target_found=target_found,
                 coordinates=coords,
-                response_text=result_json.get("explanation", "")
+                response_text=result_json.get("explanation", ""),
+                used_model=used_model,
+                reasoning=reasoning
             )
         except Exception as exc:
             return VisualQueryResult(

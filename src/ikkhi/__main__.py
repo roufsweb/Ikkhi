@@ -126,12 +126,11 @@ def run_headless_daemon(config: AppConfig) -> None:
 
 def main() -> None:
     """Initialize system configuration and route to GUI, Headless, or CLI modes."""
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-    )
-
     config = AppConfig.load_from_yaml("config.yaml")
+
+    from ikkhi.core.logger import setup_logging
+    setup_logging(debug=config.system.debug)
+
 
     # Mode 1: Explicit Headless Daemon
     if "--headless" in sys.argv:
