@@ -135,3 +135,8 @@
   - Updated Global Mermaid Dependency Graph with accurate active module names (cleaning up legacy paths).
   - Documented end-to-end operational pipelines: Spoken Execution (Tier 0 Fast-Path), Multimodal Screen Grounding (Tier 1 Fallback), and Experiential Mistake Learning Loop.
   - Integrated `ikkhi-map` governance protocol across [`AGENTS.md`](file:///e:/rouf/software-project/Ikkhi/AGENTS.md) and [`CONTEXT.md`](file:///e:/rouf/software-project/Ikkhi/CONTEXT.md).
+- **Transcription Bugfix (`TranscriptionOptions` Attribute Error):**
+  - Identified root cause of runtime error *"Notice: Inference failure during transcription: 'TranscriptionOptions' object has no attribute 'get'"* when speaking into the microphone.
+  - In `src/ikkhi/audio/stt.py`, `info.transcription_options` is a structured `dataclass` rather than a `dict`. Accessing `.get()` raised an `AttributeError` which was caught and surfaced to the UI HUD as an inference failure.
+  - Resolved by directly reading `info.language_probability` and ensuring the audio array is formatted as a 1D contiguous `float32` array.
+  - Verified with live CUDA execution and all 46 unit/integration tests passing.
