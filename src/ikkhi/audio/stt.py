@@ -74,6 +74,11 @@ class WhisperSTTEngine:
             return "", 0.0
 
         try:
+            # Ensure 1D contiguous float32 array
+            if audio_array.ndim > 1:
+                audio_array = audio_array.flatten()
+            audio_array = np.ascontiguousarray(audio_array, dtype=np.float32)
+
             # faster-whisper accepts float32 numpy arrays directly
             segments, info = self.model.transcribe(
                 audio_array,
@@ -87,7 +92,7 @@ class WhisperSTTEngine:
                 transcript_parts.append(segment.text.strip())
 
             full_text = " ".join(transcript_parts).strip()
-            confidence = float(getattr(info, "transcription_options", {}).get("temperature", 1.0))
+            confidence = float(getattr(info, "language_probability", 1.0))
             return full_text, confidence
         except Exception as exc:
             raise SpeechRecognitionError(f"Inference failure during transcription: {exc}") from exc
