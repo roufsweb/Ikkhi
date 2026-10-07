@@ -9,7 +9,7 @@
 - **Mission:** A resource-efficient, voice-controlled, local-first Windows desktop assistant that navigates heavy desktop applications (DaVinci Resolve, VS Code, Chrome) completely hands-free.
 - **Dual-Tier Execution Paradigm:**
   - **Tier 0 (Local Fast-Path, <2ms, 0 tokens, $0.00):** Deterministic regex/hotkey macros and cached Windows UI Automation (UIA) controls.
-  - **Tier 1 (On-Demand Cloud Multimodal):** Google AI Studio (`gemini-2.0-flash`) invoked *only* for ambiguous visual queries or unindexed screen coordinates.
+  - **Tier 1 (On-Demand Cloud Multimodal):** Google AI Studio (`gemini-2.0-flash`) invoked *only* for ambiguous visual queries or unindexed screen coordinates. Configured safely via local `.env` (strictly Git-ignored).
 - **Resource Budget:** Idle CPU $\approx$ 0.0% (Push-to-Talk `Ctrl+Alt+Space` with zero continuous Whisper streaming).
 
 ---

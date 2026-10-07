@@ -120,5 +120,11 @@
   - **Google AI Studio Clarification:** Reconfirmed that Google AI Studio is strictly a Tier 1 on-demand fallback for ambiguous visual screen grounding. All Tier 0 local macro operations, local speech recognition, wake-word, and screen reading aloud operate 100% offline with zero cloud tokens.
   - **Live Testing Verification:** Fixed Whisper VAD filter truncation on short speech buffers; verified that GUI and wake-word listeners operate smoothly with **46/46 automated tests passing (100% pass rate)**.
   - **Open-Source Credits Section:** Added dedicated "Credits & Open-Source Attributions" in `README.md` strictly crediting external open-source codebases, libraries, models, and runtime frameworks (`faster-whisper`, `openWakeWord`, `Piper TTS`, `DeepSeek AI`, `pywinauto`, `PyAutoGUI`, `pywin32`, `sounddevice`, `PyQt6`, `Pydantic`, `google-genai`), omitting design/aesthetic references.
-
-
+- **Google AI Studio Key Configuration & Git Secret Isolation:**
+  - Configured user's Google AI Studio API key and project ID (`projects/874442420346`) inside local [`.env`](file:///e:/rouf/software-project/Ikkhi/.env).
+  - Validated strict Git isolation: verified `.gitignore` rule (`.gitignore:36`) completely prevents `.env` and `.env.local` from being tracked or committed to GitHub (`git check-ignore -v .env` confirmed).
+  - Updated `src/ikkhi/core/config.py` with `python-dotenv` support, default environment variable factories, and dynamic environment variable overlay in `AppConfig.load_from_yaml()` so credentials take effect across both direct instantiation and YAML loads without exposing raw strings in repository files.
+  - Updated `.env.example` to document `GEMINI_PROJECT_ID` placeholder alongside `GEMINI_API_KEY`.
+  - Verified `GeminiVisualClient` initializes successfully with configured credentials.
+  - Confirmed 100% test pass rate (**46/46 automated tests passing**).
+  - Pushed clean, secret-free codebase updates to `https://github.com/roufsweb/Ikkhi.git` on branch `main`.

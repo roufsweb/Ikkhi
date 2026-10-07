@@ -151,3 +151,11 @@
 - [x] Implement User Mistake Correction & Negative Strategy Penalty Engine
 - [x] Integrate Creative App Catalog & Experiential Strategy Selection into `UniversalAutomationEngine` (`src/ikkhi/automation/universal.py`)
 - [x] Implement comprehensive unit tests in `tests/unit/test_experience.py` and `tests/unit/test_creative.py` (**39/39 tests passing**)
+
+### Phase 12: Google AI Studio Integration & Git Secret Isolation 🟢
+- [x] Configure Google AI Studio API key and project ID in local `.env` file
+- [x] Verify `.gitignore` rules prevent staging or pushing `.env` and `.env.local` to GitHub (`.gitignore:36`)
+- [x] Update `src/ikkhi/core/config.py` with `dotenv` support and dynamic environment variable overlay for `gemini_api_key` and `gemini_project_id`
+- [x] Verify `GeminiVisualClient` initializes successfully with configured credentials
+- [x] Verify all 46 automated unit and integration tests continue to pass (100% pass rate)
+- [x] Commit clean, secret-free code to Git and push to `origin/main`
