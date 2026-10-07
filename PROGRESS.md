@@ -245,3 +245,13 @@ To ensure zero guesswork for future AI agents and developers, every feature and 
 - [x] Completely re-indexed [`PROJECT_MAP.md`](file:///e:/rouf/software-project/Ikkhi/PROJECT_MAP.md) inventory, dossiers, and Mermaid graph with all newly added files, tests, and scripts
 - [x] Validated full regression test suite at **54/54 tests passing (100% pass rate)**
 
+### Phase 18: Audio Driver Resiliency, Hardware Auto-Negotiation & Diagnostics
+- [x] Diagnosed fatal PortAudio crash on WDM-KS device 24 (`PaErrorCode -9996`) caused by rigid 16kHz mono expectation
+- [x] Diagnosed Windows MMDevice physical endpoint state (Realtek 3.5mm jack `State = 8 UNPLUGGED`, VB-Audio Virtual Cable `State = 1 ACTIVE`)
+- [x] Implemented `probe_device_stream_params()` and `resolve_optimal_device_params()` in [`src/ikkhi/audio/capture.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/audio/capture.py) with active stream probing across sample rates (16kHz, 44.1kHz, 48kHz) and channel configurations
+- [x] Implemented stereo-to-mono downmixing and transparent float32 resampling in [`AudioCaptureEngine`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/audio/capture.py)
+- [x] Updated [`src/ikkhi/audio/wakeword.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/audio/wakeword.py) with adaptive device negotiation, float32 processing, continuous exponential moving average noise calibration, and automatic resampling
+- [x] Enhanced [`scripts/diagnose_interactions.py`](file:///e:/rouf/software-project/Ikkhi/scripts/diagnose_interactions.py) with Windows CoreAudio jack detection via `winreg` and live 0.3s audio RMS tester
+- [x] Verified full regression test suite passing at **54/54 tests (100% pass rate)**
+
+

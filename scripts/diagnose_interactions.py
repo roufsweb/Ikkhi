@@ -33,28 +33,54 @@ def print_banner(title: str) -> None:
 def check_audio_devices(config: AppConfig) -> None:
     print_banner("1. AUDIO RECORDING HARDWARE ANALYSIS")
     import sounddevice as sd
+    from ikkhi.audio.capture import resolve_optimal_device_params
+
+    # 1. Query Windows Hardware Endpoints
+    print("Windows Physical Jack / Endpoint Status (CoreAudio):")
+    try:
+        import winreg
+        k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Capture")
+        for i in range(winreg.QueryInfoKey(k)[0]):
+            sub = winreg.EnumKey(k, i)
+            sk = winreg.OpenKey(k, sub)
+            state, _ = winreg.QueryValueEx(sk, "DeviceState")
+            try:
+                pk = winreg.OpenKey(sk, "Properties")
+                name, _ = winreg.QueryValueEx(pk, "{a45c254e-df1c-4efd-8020-67d146a850e0},2")
+                desc, _ = winreg.QueryValueEx(pk, "{b3f8fa53-0004-438e-9003-51a46e139bfc},6")
+            except Exception:
+                continue
+            if state in (1, 4, 8):
+                status_str = "ACTIVE (Connected)" if state == 1 else ("UNPLUGGED (No cable inserted)" if state == 8 else "NOT PRESENT (Disconnected)")
+                print(f"  - {name} ({desc}): {status_str}")
+    except Exception as exc:
+        print(f"  (Could not read Windows MMDevice registry: {exc})")
+
+    # 2. PortAudio Device Negotiation
     devices = sd.query_devices()
     default_input = sd.default.device[0]
 
-    print(f"System Default Input Device Index: [{default_input}]")
+    dev_idx, native_sr, native_ch, dev_name = resolve_optimal_device_params(config.audio.input_device)
+
+    print(f"\nSystem Default Input Device Index: [{default_input}]")
     print(f"Configured Ikkhi Input Device:     [{config.audio.input_device}]")
-    print("\nAvailable Input Devices:")
+    print(f"Resolved Streaming Device:         [{dev_idx}] '{dev_name}'")
+    print(f"Negotiated Streaming Parameters:   {native_sr} Hz, {native_ch} Channel(s)")
 
-    physical_candidates = []
-    for idx, d in enumerate(devices):
-        if d.get("max_input_channels", 0) > 0:
-            name = d.get("name", "")
-            is_def = " (WINDOWS DEFAULT)" if idx == default_input else ""
-            is_silent = " [VIRTUAL CABLE - POTENTIAL SILENCE!]" if "cable" in name.lower() or "virtual" in name.lower() else ""
-            print(f"  [{idx:2d}] {name}{is_def}{is_silent}")
-            if not is_silent and "realtek" in name.lower() or "mic" in name.lower():
-                physical_candidates.append(idx)
-
-    if "cable" in devices[default_input].get("name", "").lower() and config.audio.input_device is None:
-        print("\n[CRITICAL WARNING]: Windows default recording device is VB-Audio Virtual Cable!")
-        print("Unless software routes sound into this cable, it emits pure digital silence (RMS 0.00000).")
-        if physical_candidates:
-            print(f"Recommended physical mic index: Set 'input_device: {physical_candidates[0]}' in config.yaml.")
+    # 3. Live 0.3-second stream responsiveness test
+    print("\nTesting 0.3s live audio capture...")
+    try:
+        from ikkhi.audio.capture import AudioCaptureEngine
+        eng = AudioCaptureEngine(config.audio)
+        eng.start_recording()
+        time.sleep(0.3)
+        buf = eng.stop_recording()
+        rms = eng.compute_rms(buf)
+        status_note = "Audible signal detected" if rms > 0.005 else "SILENT STREAM (RMS < 0.005)"
+        print(f">>> Capture Result: {len(buf)} samples at 16kHz | RMS: {rms:.6f} ({status_note})")
+        eng.close()
+    except Exception as exc:
+        print(f">>> Capture stream failed: {exc}")
 
 
 def check_tts_voice(config: AppConfig) -> None:

@@ -23,7 +23,7 @@ audio:
   # Natural Voice Synthesis (Google Assistant / Neural Assistant style)
   tts_engine: "neural" # "neural" (natural edge-tts) or "sapi" (legacy offline)
   tts_voice: "en-US-AvaNeural" # Ava or Aria sounds like Google Assistant
-  input_device: 24 # Microphone (Realtek HD Audio Mic input)
+  input_device: null # null for smart auto-detection, or specific integer index
 
 ai_tier:
   # Google AI Studio settings (strictly on-demand)

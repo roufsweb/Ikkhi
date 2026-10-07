@@ -14,7 +14,7 @@ import sounddevice as sd
 
 from ikkhi.core.config import AudioSettings
 from ikkhi.audio.stt import WhisperSTTEngine
-from ikkhi.audio.capture import resolve_optimal_input_device
+from ikkhi.audio.capture import resolve_optimal_device_params
 
 logger = logging.getLogger("ikkhi.audio.wakeword")
 
@@ -41,7 +41,7 @@ class WakeWordListener:
         threshold: float = 0.5,
     ) -> None:
         self.settings = settings
-        self.sample_rate = settings.sample_rate  # 16000 Hz
+        self.sample_rate = settings.sample_rate  # 16000 Hz target
         self.on_wake = on_wake
         self.stt_engine = stt_engine
         self.threshold = threshold
@@ -51,44 +51,55 @@ class WakeWordListener:
         self._thread: Optional[threading.Thread] = None
         self._audio_queue: queue.Queue[np.ndarray] = queue.Queue(maxsize=200)
         self._stream: Optional[sd.InputStream] = None
+        self._native_sr = 16000
+        self._native_ch = 1
+        self._dev_name = "Default"
 
     def _audio_callback(self, indata: np.ndarray, frames: int, time_info, status) -> None:
-        """Real-time audio callback collecting 16kHz mono chunks."""
+        """Real-time audio callback collecting mono float32 chunks."""
         if not self._running:
             return
-        chunk = indata[:, 0].copy()
+        if indata.ndim > 1 and indata.shape[1] > 1:
+            chunk = np.mean(indata, axis=1, dtype=np.float32)
+        else:
+            chunk = indata[:, 0].copy() if indata.ndim > 1 else indata.flatten().copy()
         try:
             self._audio_queue.put_nowait(chunk)
         except queue.Full:
             pass
 
     def start(self) -> None:
-        """Initiate background audio stream and inference worker thread."""
+        """Initiate background audio stream and inference worker thread with adaptive negotiation."""
         if self._running:
             return
 
         self._running = True
-        dev_idx = resolve_optimal_input_device(getattr(self.settings, "input_device", None))
+        dev_idx, native_sr, native_ch, dev_name = resolve_optimal_device_params(
+            getattr(self.settings, "input_device", None)
+        )
+        self._native_sr = native_sr
+        self._native_ch = native_ch
+        self._dev_name = dev_name
 
-        # Block size of 1280 samples = 80ms at 16kHz
+        block_size = max(512, int(native_sr * 0.08))  # ~80ms blocks
         try:
             self._stream = sd.InputStream(
                 device=dev_idx,
-                samplerate=self.sample_rate,
-                channels=1,
-                dtype="int16",
-                blocksize=1280,
+                samplerate=native_sr,
+                channels=native_ch,
+                dtype="float32",
+                blocksize=block_size,
                 callback=self._audio_callback
             )
             self._stream.start()
         except Exception as exc:
-            logger.error("Failed to start wake-word audio stream: %s", exc)
+            logger.error("Failed to start wake-word audio stream on [%s]: %s", dev_idx, exc)
             self._running = False
             return
 
         self._thread = threading.Thread(target=self._worker_loop, daemon=True, name="Ikkhi-WakeWord-Thread")
         self._thread.start()
-        logger.info("WakeWordListener activated on device [%s] for phrases: %s", dev_idx, self.WAKE_KEYWORDS[:4])
+        logger.info("WakeWordListener activated on [%s] '%s' (%dHz, %dch)", dev_idx, dev_name, native_sr, native_ch)
 
     def stop(self) -> None:
         """Cleanly terminate worker and physical input audio stream."""
@@ -107,15 +118,15 @@ class WakeWordListener:
         logger.info("WakeWordListener stopped.")
 
     def _worker_loop(self) -> None:
-        """Inference loop consuming chunks and evaluating wake models."""
+        """Inference loop consuming chunks and evaluating wake models with continuous noise adaptation."""
         speech_buffer: List[np.ndarray] = []
         silence_chunks = 0
         is_in_speech = False
         cooldown_until = 0.0
 
-        # Dynamic noise floor calibration
+        # Continuous noise floor calibration
         noise_samples: List[float] = []
-        noise_floor = 120.0
+        noise_floor = 0.005
 
         while self._running:
             try:
@@ -128,24 +139,28 @@ class WakeWordListener:
                 speech_buffer.clear()
                 continue
 
-            rms = float(np.sqrt(np.mean(np.square(chunk.astype(np.float32)))))
+            rms = float(np.sqrt(np.mean(np.square(chunk)))) if len(chunk) > 0 else 0.0
 
             # Calibrate initial background noise
             if len(noise_samples) < 15:
                 noise_samples.append(rms)
                 if len(noise_samples) == 15:
-                    noise_floor = max(80.0, float(np.mean(noise_samples)) * 1.6)
-                    logger.debug("WakeWord noise floor calibrated to: %.2f", noise_floor)
+                    noise_floor = max(0.002, float(np.mean(noise_samples)) * 1.5)
+                    logger.debug("WakeWord noise floor calibrated to: %.6f", noise_floor)
                 continue
 
-            speech_trigger = noise_floor
+            # Continuous slow adaptation during silence
+            if not is_in_speech:
+                noise_floor = 0.96 * noise_floor + 0.04 * rms
+
+            speech_trigger = max(0.010, noise_floor * 2.0)
 
             if rms >= speech_trigger:
                 # Active speech chunk
                 is_in_speech = True
                 silence_chunks = 0
                 speech_buffer.append(chunk)
-                # Keep buffer capped to 4 seconds maximum (50 chunks x 80ms)
+                # Keep buffer capped to 4 seconds maximum (~50 chunks x 80ms)
                 if len(speech_buffer) > 50:
                     speech_buffer.pop(0)
             else:
@@ -160,12 +175,21 @@ class WakeWordListener:
                         silence_chunks = 0
 
                         if self.stt_engine is not None:
-                            full_int16 = np.concatenate(speech_buffer, axis=0)
-                            float32_audio = full_int16.astype(np.float32) / 32768.0
+                            full_audio = np.concatenate(speech_buffer, axis=0)
                             speech_buffer.clear()
 
+                            # Resample to 16,000 Hz for Whisper if captured at native rate
+                            if self._native_sr != 16000 and len(full_audio) > 0:
+                                target_len = int(len(full_audio) * 16000 / self._native_sr)
+                                if target_len > 0:
+                                    try:
+                                        import scipy.signal
+                                        full_audio = scipy.signal.resample(full_audio, target_len).astype(np.float32)
+                                    except Exception as exc:
+                                        logger.debug("WakeWord resampling error: %s", exc)
+
                             try:
-                                transcript, _ = self.stt_engine.transcribe(float32_audio)
+                                transcript, _ = self.stt_engine.transcribe(full_audio)
                                 clean = transcript.lower().strip()
                                 if clean:
                                     logger.debug("Ambient mic heard: '%s'", clean)
@@ -179,7 +203,7 @@ class WakeWordListener:
 
                                 if matched_kw:
                                     logger.info("Wake-word matched: '%s' in transcript: '%s'", matched_kw, clean)
-                                    cooldown_until = now + 2.5
+                                    cooldown_until = now + 2.0
                                     # Extract remainder command if uttered in same sentence
                                     remainder = clean.split(matched_kw, 1)[-1].strip(" ,.!?")
                                     self.on_wake(matched_kw, remainder if remainder else None)

@@ -264,10 +264,10 @@ e:/rouf/software-project/Ikkhi/
 - **Submodules & Children:** `capture.py`, `hotkey.py`, `stt.py`, `tts.py`, `wakeword.py`.
 
 #### [`src/ikkhi/audio/capture.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/audio/capture.py)
-- **Job / Core Duty:** Asynchronous zero-copy 16kHz mono audio stream capture from workstation microphone into contiguous NumPy float32 arrays; includes `resolve_optimal_input_device()` to auto-bind to physical microphones (e.g., Realtek HD Audio Mic) while bypassing silent virtual audio cables.
+- **Job / Core Duty:** Asynchronous zero-copy audio stream capture from workstation microphone into contiguous NumPy float32 arrays; includes `resolve_optimal_device_params()` and `probe_device_stream_params()` with non-blocking stream probing, stereo-to-mono downmixing, and transparent resampling to 16kHz for Whisper.
 - **Inbound Connections:** `controller.py`, `__main__.py`, `wakeword.py`, `test_live_voice.py`, `test_audio.py`.
-- **Outbound Connections:** `sounddevice`, `numpy`, `queue`.
-- **Key Interfaces:** `AudioCaptureEngine`, `resolve_optimal_input_device()`, `start_recording()`, `stop_recording() -> np.ndarray`, `get_live_rms() -> float`.
+- **Outbound Connections:** `sounddevice`, `numpy`, `queue`, `scipy.signal`.
+- **Key Interfaces:** `AudioCaptureEngine`, `resolve_optimal_device_params()`, `resolve_optimal_input_device()`, `start_recording()`, `stop_recording() -> np.ndarray`, `get_live_rms() -> float`.
 - **Resource Profile:** Memory buffer queue, <0.5% CPU during recording.
 
 #### [`src/ikkhi/audio/hotkey.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/audio/hotkey.py)
@@ -292,9 +292,9 @@ e:/rouf/software-project/Ikkhi/
 - **Resource Profile:** Ultra-smooth neural voice streamed directly in memory with 0 disk I/O latency; offline SAPI fallback (<15ms).
 
 #### [`src/ikkhi/audio/wakeword.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/audio/wakeword.py)
-- **Job / Core Duty:** Continuous background acoustic wake-word listener scanning for "Hey Ikkhi" and assistant phrases (Hey Siri, Hey Google, Jarvis, Computer) using dynamic noise floor calibration, physical mic resolution, and remainder intent slicing.
+- **Job / Core Duty:** Continuous background acoustic wake-word listener scanning for "Hey Ikkhi" and assistant phrases (Hey Siri, Hey Google, Jarvis, Computer) using adaptive PortAudio device negotiation, continuous exponential moving average noise calibration, and automatic 16kHz resampling.
 - **Inbound Connections:** `controller.py`, `__main__.py`, `test_live_wakeword.py`.
-- **Outbound Connections:** `sounddevice`, `numpy`, `src/ikkhi/audio/stt.py`, `src/ikkhi/audio/capture.py`.
+- **Outbound Connections:** `sounddevice`, `numpy`, `src/ikkhi/audio/stt.py`, `src/ikkhi/audio/capture.py`, `scipy.signal`.
 - **Key Interfaces:** `WakeWordListener`, `start()`, `stop()`, `trigger_manual(phrase: str)`.
 - **Resource Profile:** Low-power acoustic stream (<1.0% CPU idle).
 
