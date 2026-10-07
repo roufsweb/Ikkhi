@@ -254,4 +254,15 @@ To ensure zero guesswork for future AI agents and developers, every feature and 
 - [x] Enhanced [`scripts/diagnose_interactions.py`](file:///e:/rouf/software-project/Ikkhi/scripts/diagnose_interactions.py) with Windows CoreAudio jack detection via `winreg` and live 0.3s audio RMS tester
 - [x] Verified full regression test suite passing at **54/54 tests (100% pass rate)**
 
+### Phase 19: Full Microphone & Speaker Autodetection, Hardware Routing & Log Diagnostics
+- [x] Identified root-cause `NameError: name 'time' is not defined` inside `probe_device_stream_params()` causing silent fallback in device probing
+- [x] Diagnosed user's newly connected physical `Microphone (USB Microphone)` on MME index [1] and active `Headphones (X-528)` on MME index [4]
+- [x] Implemented `resolve_optimal_output_device()` and `get_audio_hardware_report()` in [`src/ikkhi/audio/capture.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/audio/capture.py) to automatically identify and verify active output sinks
+- [x] Fixed `PortAudioError: Invalid sample rate [PaErrorCode -9997]` in [`src/ikkhi/audio/tts.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/audio/tts.py) by querying target device sample rate support and dynamically adapting PyAV resampling (24kHz vs 44.1kHz vs 48kHz)
+- [x] Added `output_device: Optional[int | str] = None` to `AudioSettings` in [`src/ikkhi/core/config.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/core/config.py) and `config.yaml`
+- [x] Upgraded [`scripts/diagnose_interactions.py`](file:///e:/rouf/software-project/Ikkhi/scripts/diagnose_interactions.py) and [`scripts/test_live_wakeword.py`](file:///e:/rouf/software-project/Ikkhi/scripts/test_live_wakeword.py) with dual active input & active output driver reporting
+- [x] Added unit test `test_audio_device_auto_resolution` in [`tests/unit/test_audio.py`](file:///e:/rouf/software-project/Ikkhi/tests/unit/test_audio.py)
+- [x] Verified full regression test suite passing at **55/55 tests (100% pass rate)**
+
+
 

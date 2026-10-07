@@ -34,6 +34,7 @@ class AudioSettings(BaseModel):
     whisper_device: Literal["cuda", "cpu"] = "cuda"
     compute_type: Literal["float16", "int8_float16", "int8"] = "float16"
     input_device: Optional[int | str] = None
+    output_device: Optional[int | str] = None
     tts_engine: Literal["neural", "sapi"] = "neural"
     tts_voice: str = "en-US-AvaNeural"
     tts_rate: str = "+0%"

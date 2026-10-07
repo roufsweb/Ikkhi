@@ -3,9 +3,10 @@ Zero-Copy Audio Buffer Ingestion Engine.
 Captures low-latency 16 kHz mono microphone streams into NumPy memory structures.
 """
 
+import time
 import queue
 import logging
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict, Any
 import numpy as np
 import sounddevice as sd
 from ikkhi.core.config import AudioSettings
@@ -39,7 +40,7 @@ def probe_device_stream_params(dev_idx: int) -> Optional[Tuple[int, int]]:
                 callback=_dummy_cb
             )
             stream.start()
-            time.sleep(0.03)
+            time.sleep(0.04)
             stream.stop()
             stream.close()
             if len(received) > 0:
@@ -53,15 +54,17 @@ def resolve_optimal_device_params(configured: Optional[int | str] = None) -> Tup
     """
     Intelligently identifies and verifies a working recording device, returning:
     (device_index, native_sample_rate, channels, device_name).
+    Prioritizes real physical microphones (e.g. USB Mic, Headset) and avoids virtual cables.
     Guarantees that the resolved device will not crash PortAudio with PaErrorCode -9996.
     """
     try:
         devices = sd.query_devices()
+        apis = [a["name"] for a in sd.query_hostapis()]
     except Exception as exc:
         logger.debug("Failed to query devices: %s", exc)
         return (None, 16000, 1, "Default Device")
 
-    # 1. If explicitly configured, probe user's preference
+    # 1. If explicitly configured by user, probe that specific index
     if configured is not None:
         try:
             cfg_idx = int(configured)
@@ -76,29 +79,43 @@ def resolve_optimal_device_params(configured: Optional[int | str] = None) -> Tup
         except (ValueError, TypeError):
             pass
 
-    # 2. Check for physical microphones (USB, Headset, Realtek) on stable APIs
-    apis = [a["name"] for a in sd.query_hostapis()]
-    for idx, d in enumerate(devices):
-        if d.get("max_input_channels", 0) > 0:
-            name = d.get("name", "").lower()
-            api = apis[d.get("hostapi", 0)] if d.get("hostapi", 0) < len(apis) else ""
-            if ("mic" in name or "headset" in name or "usb" in name) and "cable" not in name and "virtual" not in name and "mapper" not in name:
-                params = probe_device_stream_params(idx)
-                if params is not None:
-                    logger.info("Auto-resolved physical microphone: [%d] (%s) '%s' (%dHz, %dch)", idx, api, d["name"], params[0], params[1])
-                    return (idx, params[0], params[1], d["name"])
-
-    # 3. Fallback to default Windows input device
+    # 2. Check Windows System Default Input device first
     try:
         def_idx = sd.default.device[0]
         if def_idx is not None and 0 <= def_idx < len(devices):
-            params = probe_device_stream_params(def_idx)
-            if params is not None:
-                dname = devices[def_idx].get("name", f"Device [{def_idx}]")
-                logger.info("Auto-resolved Windows default audio device: [%d] '%s' (%dHz, %dch)", def_idx, dname, params[0], params[1])
-                return (def_idx, params[0], params[1], dname)
-    except Exception:
-        pass
+            d = devices[def_idx]
+            dname = d.get("name", "").lower()
+            # If default input is a legitimate physical mic (not virtual cable or loopback), probe it
+            if "cable" not in dname and "virtual" not in dname and "stereo mix" not in dname:
+                params = probe_device_stream_params(def_idx)
+                if params is not None:
+                    api = apis[d.get("hostapi", 0)] if d.get("hostapi", 0) < len(apis) else ""
+                    logger.info("Auto-resolved active default microphone: [%d] (%s) '%s' (%dHz, %dch)", def_idx, api, d["name"], params[0], params[1])
+                    return (def_idx, params[0], params[1], d["name"])
+    except Exception as exc:
+        logger.debug("Default input probe error: %s", exc)
+
+    # 3. Scan all devices for physical microphones (USB, Headset, Mic Array, Realtek), prioritizing MME / WASAPI
+    # Sort host APIs: MME (0) and WASAPI (2) first, avoid WDM-KS (3) kernel locking
+    candidate_devices = []
+    for idx, d in enumerate(devices):
+        if d.get("max_input_channels", 0) > 0:
+            name = d.get("name", "").lower()
+            hostapi = d.get("hostapi", 0)
+            if "cable" not in name and "virtual" not in name and "stereo mix" not in name and "line in" not in name:
+                is_physical = any(k in name for k in ("mic", "headset", "usb", "array", "realtek"))
+                # Priority: 0 for MME/WASAPI physical, 1 for DirectSound physical, 2 for WDM-KS physical, 3 for other
+                priority = 0 if is_physical and hostapi in (0, 2) else (1 if is_physical and hostapi == 1 else (2 if is_physical else 3))
+                candidate_devices.append((priority, idx, d))
+
+    candidate_devices.sort(key=lambda x: x[0])
+
+    for _, idx, d in candidate_devices:
+        params = probe_device_stream_params(idx)
+        if params is not None:
+            api = apis[d.get("hostapi", 0)] if d.get("hostapi", 0) < len(apis) else ""
+            logger.info("Auto-resolved active physical microphone: [%d] (%s) '%s' (%dHz, %dch)", idx, api, d["name"], params[0], params[1])
+            return (idx, params[0], params[1], d["name"])
 
     # 4. Fallback to device 0 (Microsoft Sound Mapper)
     if len(devices) > 0:
@@ -107,6 +124,133 @@ def resolve_optimal_device_params(configured: Optional[int | str] = None) -> Tup
             return (0, params[0], params[1], devices[0].get("name", "Device [0]"))
 
     return (None, 16000, 1, "Default Audio Device")
+
+
+def resolve_optimal_output_device(configured: Optional[int | str] = None) -> Tuple[Optional[int], int, int, str]:
+    """
+    Intelligently identifies and verifies a working playback device (speakers / headphones), returning:
+    (device_index, native_sample_rate, channels, device_name).
+    Prioritizes real headphones/speakers over virtual cable loopbacks.
+    """
+    try:
+        devices = sd.query_devices()
+        apis = [a["name"] for a in sd.query_hostapis()]
+    except Exception as exc:
+        logger.debug("Failed to query output devices: %s", exc)
+        return (None, 44100, 2, "Default Output Device")
+
+    # 1. User configured output device
+    if configured is not None:
+        try:
+            cfg_idx = int(configured)
+            if 0 <= cfg_idx < len(devices) and devices[cfg_idx].get("max_output_channels", 0) > 0:
+                d = devices[cfg_idx]
+                sr = int(d.get("default_samplerate", 44100))
+                ch = min(2, d.get("max_output_channels", 2))
+                try:
+                    sd.check_output_settings(device=cfg_idx, samplerate=sr, channels=ch)
+                    dname = d.get("name", f"Device [{cfg_idx}]")
+                    logger.info("Using configured output audio device: [%d] '%s' (%dHz, %dch)", cfg_idx, dname, sr, ch)
+                    return (cfg_idx, sr, ch, dname)
+                except Exception:
+                    pass
+        except (ValueError, TypeError):
+            pass
+
+    # 2. Check Windows Default Output device
+    try:
+        def_idx = sd.default.device[1]
+        if def_idx is not None and 0 <= def_idx < len(devices):
+            d = devices[def_idx]
+            dname = d.get("name", "").lower()
+            if "cable" not in dname and "virtual" not in dname:
+                sr = int(d.get("default_samplerate", 44100))
+                ch = min(2, d.get("max_output_channels", 2))
+                try:
+                    sd.check_output_settings(device=def_idx, samplerate=sr, channels=ch)
+                    api = apis[d.get("hostapi", 0)] if d.get("hostapi", 0) < len(apis) else ""
+                    logger.info("Auto-resolved active default speaker/headphones: [%d] (%s) '%s' (%dHz, %dch)", def_idx, api, d["name"], sr, ch)
+                    return (def_idx, sr, ch, d["name"])
+                except Exception:
+                    pass
+    except Exception as exc:
+        logger.debug("Default output probe error: %s", exc)
+
+    # 3. Scan all output devices for physical headphones/speakers
+    candidate_devices = []
+    for idx, d in enumerate(devices):
+        if d.get("max_output_channels", 0) > 0:
+            name = d.get("name", "").lower()
+            hostapi = d.get("hostapi", 0)
+            if "cable" not in name and "virtual" not in name:
+                is_physical = any(k in name for k in ("headphone", "speaker", "audio", "x-528", "realtek"))
+                priority = 0 if is_physical and hostapi in (0, 2) else (1 if is_physical and hostapi == 1 else (2 if is_physical else 3))
+                candidate_devices.append((priority, idx, d))
+
+    candidate_devices.sort(key=lambda x: x[0])
+
+    for _, idx, d in candidate_devices:
+        sr = int(d.get("default_samplerate", 44100))
+        ch = min(2, d.get("max_output_channels", 2))
+        try:
+            sd.check_output_settings(device=idx, samplerate=sr, channels=ch)
+            api = apis[d.get("hostapi", 0)] if d.get("hostapi", 0) < len(apis) else ""
+            logger.info("Auto-resolved active physical output: [%d] (%s) '%s' (%dHz, %dch)", idx, api, d["name"], sr, ch)
+            return (idx, sr, ch, d["name"])
+        except Exception:
+            continue
+
+    return (None, 44100, 2, "Default Output Device")
+
+
+def get_audio_hardware_report() -> Dict[str, Any]:
+    """
+    Comprehensive diagnostic report enumerating host audio APIs, connected endpoints,
+    Windows CoreAudio jack states, and resolved routing paths.
+    """
+    devices = sd.query_devices()
+    apis = [a["name"] for a in sd.query_hostapis()]
+
+    # CoreAudio physical status
+    core_audio = []
+    try:
+        import winreg
+        k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Capture")
+        for i in range(winreg.QueryInfoKey(k)[0]):
+            sub = winreg.EnumKey(k, i)
+            sk = winreg.OpenKey(k, sub)
+            state, _ = winreg.QueryValueEx(sk, "DeviceState")
+            try:
+                pk = winreg.OpenKey(sk, "Properties")
+                name, _ = winreg.QueryValueEx(pk, "{a45c254e-df1c-4efd-8020-67d146a850e0},2")
+                desc, _ = winreg.QueryValueEx(pk, "{b3f8fa53-0004-438e-9003-51a46e139bfc},6")
+                status_str = "ACTIVE (Connected)" if state == 1 else ("UNPLUGGED" if state == 8 else "DISABLED")
+                core_audio.append({"name": name, "desc": desc, "state": state, "status": status_str})
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    in_idx, in_sr, in_ch, in_name = resolve_optimal_device_params()
+    out_idx, out_sr, out_ch, out_name = resolve_optimal_output_device()
+
+    return {
+        "host_apis": apis,
+        "default_devices": list(sd.default.device),
+        "core_audio_endpoints": core_audio,
+        "resolved_input": {
+            "device_index": in_idx,
+            "device_name": in_name,
+            "sample_rate": in_sr,
+            "channels": in_ch,
+        },
+        "resolved_output": {
+            "device_index": out_idx,
+            "device_name": out_name,
+            "sample_rate": out_sr,
+            "channels": out_ch,
+        }
+    }
 
 
 def resolve_optimal_input_device(configured: Optional[int | str] = None) -> Optional[int]:

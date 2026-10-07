@@ -52,10 +52,11 @@ def run_live_test():
     config = AppConfig.load_from_yaml("config.yaml")
 
     try:
-        in_dev = sd.query_devices(kind="input")
-        out_dev = sd.query_devices(kind="output")
-        logger.info("Microphone:     %s", in_dev["name"])
-        logger.info("Speakers/Audio: %s", out_dev["name"])
+        from ikkhi.audio.capture import resolve_optimal_device_params, resolve_optimal_output_device
+        in_idx, in_sr, in_ch, in_name = resolve_optimal_device_params(config.audio.input_device)
+        out_idx, out_sr, out_ch, out_name = resolve_optimal_output_device(getattr(config.audio, "output_device", None))
+        logger.info("Active Mic:     [%s] %s (%dHz, %dch)", in_idx, in_name, in_sr, in_ch)
+        logger.info("Active Audio:   [%s] %s (%dHz, %dch)", out_idx, out_name, out_sr, out_ch)
     except Exception as exc:
         logger.warning("Could not query sound devices: %s", exc)
 

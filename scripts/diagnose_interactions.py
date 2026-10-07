@@ -31,44 +31,47 @@ def print_banner(title: str) -> None:
 
 
 def check_audio_devices(config: AppConfig) -> None:
-    print_banner("1. AUDIO RECORDING HARDWARE ANALYSIS")
+    print_banner("1. AUDIO HARDWARE AUTO-DETECTION & DRIVER ROUTING")
     import sounddevice as sd
-    from ikkhi.audio.capture import resolve_optimal_device_params
+    from ikkhi.audio.capture import (
+        resolve_optimal_device_params,
+        resolve_optimal_output_device,
+        get_audio_hardware_report
+    )
 
-    # 1. Query Windows Hardware Endpoints
-    print("Windows Physical Jack / Endpoint Status (CoreAudio):")
-    try:
-        import winreg
-        k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Capture")
-        for i in range(winreg.QueryInfoKey(k)[0]):
-            sub = winreg.EnumKey(k, i)
-            sk = winreg.OpenKey(k, sub)
-            state, _ = winreg.QueryValueEx(sk, "DeviceState")
-            try:
-                pk = winreg.OpenKey(sk, "Properties")
-                name, _ = winreg.QueryValueEx(pk, "{a45c254e-df1c-4efd-8020-67d146a850e0},2")
-                desc, _ = winreg.QueryValueEx(pk, "{b3f8fa53-0004-438e-9003-51a46e139bfc},6")
-            except Exception:
-                continue
-            if state in (1, 4, 8):
-                status_str = "ACTIVE (Connected)" if state == 1 else ("UNPLUGGED (No cable inserted)" if state == 8 else "NOT PRESENT (Disconnected)")
-                print(f"  - {name} ({desc}): {status_str}")
-    except Exception as exc:
-        print(f"  (Could not read Windows MMDevice registry: {exc})")
+    report = get_audio_hardware_report()
 
-    # 2. PortAudio Device Negotiation
-    devices = sd.query_devices()
-    default_input = sd.default.device[0]
+    # 1. Host Audio APIs
+    print("Available Host Audio APIs / Drivers on Windows:")
+    for i, api in enumerate(report["host_apis"]):
+        print(f"  [{i}] {api}")
 
+    # 2. Windows CoreAudio Physical Endpoint Status
+    print("\nWindows Physical Jack / Endpoint Status (CoreAudio Registry):")
+    if report["core_audio_endpoints"]:
+        for ep in report["core_audio_endpoints"]:
+            print(f"  - {ep['name']} ({ep['desc']}): {ep['status']}")
+    else:
+        print("  (No CoreAudio MMDevice endpoints enumerated)")
+
+    # 3. Input Device Auto-Detection
     dev_idx, native_sr, native_ch, dev_name = resolve_optimal_device_params(config.audio.input_device)
+    print("\n[ACTIVE MICROPHONE (INPUT)]")
+    print(f"  • Windows Default Input Index: [{report['default_devices'][0]}]")
+    print(f"  • Configured Input Device:     [{config.audio.input_device}]")
+    print(f"  • Auto-Resolved Input Device:  [{dev_idx}] '{dev_name}'")
+    print(f"  • Operating Format:            {native_sr} Hz, {native_ch} Channel(s)")
 
-    print(f"\nSystem Default Input Device Index: [{default_input}]")
-    print(f"Configured Ikkhi Input Device:     [{config.audio.input_device}]")
-    print(f"Resolved Streaming Device:         [{dev_idx}] '{dev_name}'")
-    print(f"Negotiated Streaming Parameters:   {native_sr} Hz, {native_ch} Channel(s)")
+    # 4. Output Device Auto-Detection
+    out_idx, out_sr, out_ch, out_name = resolve_optimal_output_device(getattr(config.audio, "output_device", None))
+    print("\n[ACTIVE SPEAKERS / HEADPHONES (OUTPUT)]")
+    print(f"  • Windows Default Output Index: [{report['default_devices'][1]}]")
+    print(f"  • Configured Output Device:     [{getattr(config.audio, 'output_device', None)}]")
+    print(f"  • Auto-Resolved Output Device:  [{out_idx}] '{out_name}'")
+    print(f"  • Operating Format:             {out_sr} Hz, {out_ch} Channel(s)")
 
-    # 3. Live 0.3-second stream responsiveness test
-    print("\nTesting 0.3s live audio capture...")
+    # 5. Live 0.3-second stream responsiveness test
+    print("\nTesting 0.3s live audio capture from active microphone...")
     try:
         from ikkhi.audio.capture import AudioCaptureEngine
         eng = AudioCaptureEngine(config.audio)
@@ -80,7 +83,9 @@ def check_audio_devices(config: AppConfig) -> None:
         print(f">>> Capture Result: {len(buf)} samples at 16kHz | RMS: {rms:.6f} ({status_note})")
         eng.close()
     except Exception as exc:
+        import traceback
         print(f">>> Capture stream failed: {exc}")
+        traceback.print_exc()
 
 
 def check_tts_voice(config: AppConfig) -> None:

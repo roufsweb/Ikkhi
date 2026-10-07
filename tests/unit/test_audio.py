@@ -49,3 +49,31 @@ def test_wake_word_listener_lifecycle():
     # Test programmatic / manual wake trigger
     listener.trigger_manual("hey ikkhi")
     mock_wake.assert_called_once_with("hey ikkhi", None)
+
+
+def test_audio_device_auto_resolution():
+    from ikkhi.audio.capture import (
+        resolve_optimal_device_params,
+        resolve_optimal_output_device,
+        get_audio_hardware_report
+    )
+
+    in_idx, in_sr, in_ch, in_name = resolve_optimal_device_params()
+    assert isinstance(in_sr, int)
+    assert in_sr in (16000, 44100, 48000)
+    assert in_ch in (1, 2)
+    assert isinstance(in_name, str)
+
+    out_idx, out_sr, out_ch, out_name = resolve_optimal_output_device()
+    assert isinstance(out_sr, int)
+    assert out_sr > 0
+    assert out_ch in (1, 2)
+    assert isinstance(out_name, str)
+
+    rep = get_audio_hardware_report()
+    assert "host_apis" in rep
+    assert "default_devices" in rep
+    assert "resolved_input" in rep
+    assert "resolved_output" in rep
+    assert rep["resolved_input"]["sample_rate"] == in_sr
+    assert rep["resolved_output"]["sample_rate"] == out_sr

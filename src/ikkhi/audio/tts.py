@@ -106,10 +106,21 @@ class LocalSpeechEngine:
             if not audio_bytes:
                 return False
 
-            # Decode MP3 bytes in-memory using PyAV to PCM float32
+            from ikkhi.audio.capture import resolve_optimal_output_device
+            out_idx, out_sr, out_ch, out_name = resolve_optimal_output_device(
+                getattr(self.settings, "output_device", None)
+            )
+
+            # Determine supported playback sample rate (24000 Hz default, or device native 44.1/48kHz)
+            target_sample_rate = 24000
+            try:
+                sd.check_output_settings(device=out_idx, samplerate=target_sample_rate)
+            except Exception:
+                target_sample_rate = int(out_sr) if out_sr > 0 else 44100
+
+            # Decode MP3 bytes in-memory using PyAV to PCM float32 at negotiated rate
             container = av.open(io.BytesIO(audio_bytes))
             stream = container.streams.audio[0]
-            target_sample_rate = 24000
             resampler = av.AudioResampler(format="fltp", layout="mono", rate=target_sample_rate)
 
             frames = []
@@ -122,9 +133,8 @@ class LocalSpeechEngine:
                 return False
 
             pcm_data = np.concatenate(frames)
-            # Output device resolution
-            device_id = getattr(self.settings, "output_device", None)
-            sd.play(pcm_data, samplerate=target_sample_rate, device=device_id)
+            logger.debug("Playing neural TTS audio on [%s] '%s' (%dHz)", out_idx, out_name, target_sample_rate)
+            sd.play(pcm_data, samplerate=target_sample_rate, device=out_idx)
             sd.wait()
             return True
         except Exception as exc:
