@@ -8,8 +8,11 @@ Logs are streamed to console and persistently appended to storage/live_test.log.
 import sys
 import os
 import time
+import threading
 import logging
+from typing import Optional, Tuple
 from pathlib import Path
+import numpy as np
 
 # Force unbuffered output so logs appear instantly
 if hasattr(sys.stdout, "reconfigure"):
