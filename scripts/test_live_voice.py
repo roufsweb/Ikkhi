@@ -76,7 +76,7 @@ def run_diagnostics():
         print("  • Signal Status: [PASS] Audio energy cleanly captured.")
 
     # 3. Test Local Zero-Token Speech Output (TTS)
-    print_banner("Step 3/4: Testing Local Zero-Token Speech Output (TTS)")
+    print_banner("Step 3/5: Testing Local Zero-Token Speech Output (TTS)")
     print("Testing local voice feedback through your workstation speakers...")
     tts = LocalSpeechEngine(config.audio)
     
@@ -86,8 +86,27 @@ def run_diagnostics():
     tts.stop()
     print("[PASS] Spoken output dispatched.")
 
-    # 4. Summary & Verification
-    print_banner("Step 4/4: Hardware Diagnostics Summary")
+    # 4. Test Local Whisper GPU Speech-to-Text (STT)
+    print_banner("Step 4/5: Testing Local Faster-Whisper GPU Transcription")
+    print("Transcribing your recorded 3-second speech audio on CUDA...")
+    from ikkhi.audio.stt import WhisperSTTEngine
+    stt = WhisperSTTEngine(config.audio, config.network)
+    try:
+        t0 = time.time()
+        transcript, conf = stt.transcribe(audio_buffer)
+        t_elapsed = (time.time() - t0) * 1000
+        print(f"  • Transcribed Text: \"{transcript}\"")
+        print(f"  • Confidence:       {conf:.2%}")
+        print(f"  • Latency:          {t_elapsed:.1f} ms")
+        if transcript.strip():
+            print("  • STT Status:       [PASS] Speech cleanly transcribed on local GPU.")
+        else:
+            print("  • STT Status:       [NOTICE] No distinct speech detected in 3-second window.")
+    except Exception as exc:
+        print(f"  • STT Status:       [FAIL] Transcription error: {exc}")
+
+    # 5. Summary & Verification
+    print_banner("Step 5/5: Hardware Diagnostics Summary")
     print("All core audio hardware loops verified successfully!")
     print("You are ready to launch the background assistant daemon:")
     print("  python -m ikkhi\n")

@@ -115,7 +115,7 @@ class WakeWordListener:
     def _worker_loop(self) -> None:
         """Inference loop consuming chunks and evaluating wake models."""
         speech_buffer: List[np.ndarray] = []
-        silence_threshold = 350.0  # Amplitude threshold for int16
+        silence_threshold = 180.0  # Increased sensitivity for desktop microphones
         silence_chunks = 0
         is_in_speech = False
         cooldown_until = 0.0
@@ -162,8 +162,8 @@ class WakeWordListener:
                     silence_chunks += 1
                     speech_buffer.append(chunk)
 
-                    # After ~350ms of trailing silence (4 chunks * 80ms) and at least 0.5s of speech
-                    if silence_chunks >= 4 and len(speech_buffer) >= 7:
+                    # After ~240ms of trailing silence (3 chunks * 80ms) and at least 0.4s of speech (5 chunks)
+                    if silence_chunks >= 3 and len(speech_buffer) >= 5:
                         is_in_speech = False
                         silence_chunks = 0
                         

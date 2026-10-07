@@ -6,9 +6,9 @@ system:
   storage_directory: "storage"
 
 network:
-  # SOCKS5 proxy configuration for heavy model downloads (Whisper, openWakeWord, etc.)
-  proxy: "socks5://02:1234@27.147.152.33:5645"
-  use_proxy_for_downloads: true
+  # Optional proxy configuration for model downloads (leave empty for direct connection)
+  proxy: ""
+  use_proxy_for_downloads: false
 
 audio:
   # Mode options: "both", "push_to_talk", "wake_word"
