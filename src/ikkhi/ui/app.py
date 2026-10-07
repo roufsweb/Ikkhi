@@ -67,6 +67,7 @@ class IkkhiApplication:
         primary_screen = QGuiApplication.primaryScreen()
         if primary_screen:
             geom = primary_screen.availableGeometry()
+            self.overlay.adjustSize()
             overlay_w = self.overlay.width()
             pos_x = geom.x() + (geom.width() - overlay_w) // 2
             pos_y = geom.y() + 45  # 45px padding from screen summit
@@ -89,6 +90,7 @@ class IkkhiApplication:
     def start(self) -> None:
         """Launch visual presentation and commence background hotkey monitoring."""
         self.overlay.show()
+        self._position_overlay()
         self.dashboard.show()
         self.dashboard.activateWindow()
         self.tray.show()

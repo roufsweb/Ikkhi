@@ -207,6 +207,15 @@ class DashboardWindow(QMainWindow):
         row1.addWidget(self.input_hotkey)
         layout.addLayout(row1)
 
+        # Wake-Word Phrase
+        row_wake = QHBoxLayout()
+        lbl_wake = QLabel("Wake-Word Phrase:", widget)
+        lbl_wake.setFixedWidth(160)
+        self.input_wakeword = QLineEdit(self.config.audio.wake_word, widget)
+        row_wake.addWidget(lbl_wake)
+        row_wake.addWidget(self.input_wakeword)
+        layout.addLayout(row_wake)
+
         # Whisper Model
         row2 = QHBoxLayout()
         lbl2 = QLabel("Whisper STT Model:", widget)
@@ -238,6 +247,15 @@ class DashboardWindow(QMainWindow):
         row4.addWidget(lbl4)
         row4.addWidget(self.input_apikey)
         layout.addLayout(row4)
+
+        # Gemini Project ID
+        row_proj = QHBoxLayout()
+        lbl_proj = QLabel("Gemini Project ID:", widget)
+        lbl_proj.setFixedWidth(160)
+        self.input_project_id = QLineEdit(self.config.ai_tier.gemini_project_id, widget)
+        row_proj.addWidget(lbl_proj)
+        row_proj.addWidget(self.input_project_id)
+        layout.addLayout(row_proj)
 
         # Proxy
         row5 = QHBoxLayout()
@@ -281,9 +299,11 @@ class DashboardWindow(QMainWindow):
     def _save_settings(self) -> None:
         """Persist modified settings back to configuration."""
         self.config.audio.push_to_talk_key = self.input_hotkey.text().strip().lower()
+        self.config.audio.wake_word = self.input_wakeword.text().strip().lower()
         self.config.audio.whisper_model = self.combo_whisper.currentText()
         self.config.audio.whisper_device = self.combo_device.currentText()
         self.config.ai_tier.gemini_api_key = self.input_apikey.text().strip()
+        self.config.ai_tier.gemini_project_id = self.input_project_id.text().strip()
         self.config.network.proxy = self.input_proxy.text().strip()
 
         QMessageBox.information(self, "Settings Saved", "Preferences have been updated successfully.")

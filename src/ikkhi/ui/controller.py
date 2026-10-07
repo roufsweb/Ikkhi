@@ -76,6 +76,11 @@ class GUIController(QObject):
         self._is_muted = False
         self._active_worker: Optional[AudioInferenceWorker] = None
 
+        # Real-time RMS polling timer for audio waveform visualizer (40 FPS)
+        self._rms_timer = QTimer(self)
+        self._rms_timer.setInterval(25)
+        self._rms_timer.timeout.connect(self._poll_live_rms)
+
         # Setup Push-to-Talk global keyboard listener
         self.hotkey_listener = PushToTalkListener(
             settings=config.audio,
@@ -115,6 +120,8 @@ class GUIController(QObject):
 
     def stop_listeners(self) -> None:
         """Safely release audio resources and terminate keyboard hooks."""
+        if self._rms_timer.isActive():
+            self._rms_timer.stop()
         try:
             self.hotkey_listener.stop()
         except Exception:
@@ -127,6 +134,14 @@ class GUIController(QObject):
         self.capture_engine.close()
         self.orchestrator.speech_engine.stop()
 
+    def _poll_live_rms(self) -> None:
+        """Poll the physical audio capture engine for live RMS volume."""
+        if self.capture_engine._is_recording:
+            raw_rms = self.capture_engine.get_live_rms()
+            # Sensitivity boost: scale ambient voice (0.01 - 0.08) cleanly to 0.15 - 1.0
+            normalized = min(1.0, max(0.0, raw_rms * 18.0))
+            self.rms_updated.emit(normalized)
+
     def _on_wake_word_detected(self, trigger_name: str, optional_command: Optional[str]) -> None:
         """Callback invoked when wake-word is triggered."""
         if self._is_muted:
@@ -138,9 +153,10 @@ class GUIController(QObject):
             self.execute_simulated_command(optional_command)
         else:
             self.state_changed.emit("listening", "Wake word recognized! Listening...")
-            # Automatically record speech command for 3 seconds without blocking GUI
+            # Automatically record speech command for 3.5 seconds with live waveform animation
             self.capture_engine.start_recording()
-            QTimer.singleShot(3000, self._on_hotkey_released)
+            self._rms_timer.start()
+            QTimer.singleShot(3500, self._on_hotkey_released)
 
     def set_muted(self, muted: bool) -> None:
         """Toggle microphone mute status."""
@@ -156,16 +172,14 @@ class GUIController(QObject):
 
         self.state_changed.emit("listening", "Listening to microphone...")
         self.capture_engine.start_recording()
-
-        # Monitor RMS in audio stream periodically
-        # Relay simulated or capture RMS
-        rms = self.capture_engine.get_live_rms()
-        self.rms_updated.emit(min(1.0, rms * 15.0))
+        self._rms_timer.start()
 
     def _on_hotkey_released(self) -> None:
         if self._is_muted:
             return
 
+        self._rms_timer.stop()
+        self.rms_updated.emit(0.0)
         self.state_changed.emit("processing", "Transcribing speech on CUDA...")
         audio_buffer = self.capture_engine.stop_recording()
 

@@ -120,4 +120,10 @@ def test_dashboard_metrics_and_logging(qapp):
     assert dashboard.stats["cloud_count"] == 1
     assert dashboard.history_table.rowCount() == 2
 
+    # Verify new settings tab fields
+    assert hasattr(dashboard, "input_wakeword")
+    assert hasattr(dashboard, "input_project_id")
+    assert dashboard.input_wakeword.text() == config.audio.wake_word
+    assert dashboard.input_project_id.text() == config.ai_tier.gemini_project_id
+
     dashboard.close()
