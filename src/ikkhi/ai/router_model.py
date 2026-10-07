@@ -107,11 +107,13 @@ class ReasonedModelOrchestrator:
         if has_image:
             # Case 1: Visual / UI Grounding Task
             priority = [
+                "gemini-3.8-flash",
+                "gemini-3.5-flash",
+                "gemini-3.1-flash-lite",
                 "gemini-2.5-flash",
                 "gemini-flash-latest",
-                "gemini-2.5-flash-lite",
-                "gemini-3.5-flash",
                 "gemini-2.5-pro",
+                "gemini-pro-latest",
             ]
             task_desc = "Multimodal visual screen grounding (requires high-speed spatial coordinate detection)."
         elif is_complex:
@@ -119,17 +121,18 @@ class ReasonedModelOrchestrator:
             priority = [
                 "gemini-2.5-pro",
                 "gemini-pro-latest",
-                "gemini-2.5-flash",
-                "gemini-flash-latest",
+                "gemini-3.8-flash",
+                "gemini-3.5-flash",
             ]
             task_desc = "Complex analytical and diagnostic reasoning (requires deep multi-step logic)."
         else:
             # Case 3: Fast conversational or utility query
             priority = [
+                "gemini-3.8-flash",
+                "gemini-3.5-flash",
+                "gemini-3.1-flash-lite",
                 "gemini-2.5-flash",
                 "gemini-flash-latest",
-                "gemini-2.5-flash-lite",
-                "gemini-flash-lite-latest",
             ]
             task_desc = "Fast interactive command assistance (optimized for minimal latency and high responsiveness)."
 
@@ -144,7 +147,7 @@ class ReasonedModelOrchestrator:
             valid_candidates = priority
 
         # If user explicitly preferred a model and it's valid, put it first
-        if clean_pref and clean_pref in available:
+        if clean_pref and (not available or clean_pref in available):
             if clean_pref in valid_candidates:
                 valid_candidates.remove(clean_pref)
             valid_candidates.insert(0, clean_pref)

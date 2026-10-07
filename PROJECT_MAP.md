@@ -60,7 +60,7 @@ e:/rouf/software-project/Ikkhi/
 │       │   ├── hotkey.py                   # Global push-to-talk listener & user key tracker (pynput)
 │       │   ├── stt.py                      # Local faster-whisper CUDA GPU transcription engine
 │       │   ├── tts.py                      # Natural Edge Neural TTS (Google Assistant style) + SAPI fallback
-│       │   └── wakeword.py                 # Low-overhead acoustic wake-word spotter & dynamic calibrator
+│       │   └── wakeword.py                 # Low-overhead CPU int8 acoustic wake-word spotter (0.0% GPU idle) & calibrator
 │       │
 │       ├── ai/                             # Dynamic model discovery, reasoned selection & fallback
 │       │   ├── __init__.py
@@ -99,7 +99,7 @@ e:/rouf/software-project/Ikkhi/
 │           ├── beacon.py                   # HeyClicky-style visual target beacon & cursor ripple indicator
 │           └── app.py                      # Master Qt application coordinator & window manager
 │
-├── tests/                                  # Comprehensive automated test suite (54 tests, 100% pass)
+├── tests/                                  # Comprehensive automated test suite (55 tests, 100% pass)
 │   ├── __init__.py
 │   ├── integration/                        # End-to-end integration tests
 │   │   ├── __init__.py
@@ -292,11 +292,11 @@ e:/rouf/software-project/Ikkhi/
 - **Resource Profile:** Ultra-smooth neural voice streamed directly in memory with 0 disk I/O latency; offline SAPI fallback (<15ms).
 
 #### [`src/ikkhi/audio/wakeword.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/audio/wakeword.py)
-- **Job / Core Duty:** Continuous background acoustic wake-word listener scanning for "Hey Ikkhi" and assistant phrases (Hey Siri, Hey Google, Jarvis, Computer) using adaptive PortAudio device negotiation, continuous exponential moving average noise calibration, and automatic 16kHz resampling.
+- **Job / Core Duty:** Continuous background acoustic wake-word listener scanning for "Hey Ikkhi" and assistant phrases (Hey Siri, Hey Google, Jarvis, Computer) using dedicated CPU int8 Whisper (`tiny.en`), PortAudio adaptive device negotiation, continuous exponential moving average noise calibration, sub-0.55s noise burst rejection, and automatic 16kHz resampling. Keeps idle GPU usage at strictly 0.0%.
 - **Inbound Connections:** `controller.py`, `__main__.py`, `test_live_wakeword.py`.
-- **Outbound Connections:** `sounddevice`, `numpy`, `src/ikkhi/audio/stt.py`, `src/ikkhi/audio/capture.py`, `scipy.signal`.
+- **Outbound Connections:** `sounddevice`, `numpy`, `faster_whisper.WhisperModel`, `src/ikkhi/audio/stt.py`, `src/ikkhi/audio/capture.py`, `scipy.signal`.
 - **Key Interfaces:** `WakeWordListener`, `start()`, `stop()`, `trigger_manual(phrase: str)`.
-- **Resource Profile:** Low-power acoustic stream (<1.0% CPU idle).
+- **Resource Profile:** Low-power CPU acoustic stream (<0.5% CPU idle, 0.0% GPU idle).
 
 ---
 
@@ -573,8 +573,8 @@ e:/rouf/software-project/Ikkhi/
 - **Outbound Connections:** `src/ikkhi/audio/capture.py`, `src/ikkhi/audio/tts.py`.
 
 #### [`scripts/test_live_wakeword.py`](file:///e:/rouf/software-project/Ikkhi/scripts/test_live_wakeword.py)
-- **Job / Core Duty:** Headless console wake-word tester; continuously monitors microphone for "Hey Ikkhi" and logs telemetry to `storage/live_test.log`.
-- **Outbound Connections:** `src/ikkhi/audio/wakeword.py`, `src/ikkhi/audio/stt.py`.
+- **Job / Core Duty:** Interactive voice & wake-word session tester; runs zero-GPU acoustic wake detection, initiates Gemini Live-style conversational standby session (`run_conversation_standby()` with real-time dynamic energy VAD `record_natural_utterance()`), enables natural multi-turn dialog without repeating wake words, handles polite farewells, and logs telemetry to `storage/live_test.log`.
+- **Outbound Connections:** `src/ikkhi/audio/wakeword.py`, `src/ikkhi/audio/stt.py`, `src/ikkhi/audio/tts.py`, `src/ikkhi/audio/capture.py`, `src/ikkhi/core/orchestrator.py`.
 
 #### [`scripts/validate_environment.py`](file:///e:/rouf/software-project/Ikkhi/scripts/validate_environment.py)
 - **Job / Core Duty:** Host validation utility checking Python 3.12, NVIDIA CUDA availability, SOCKS5 proxy connectivity, and sound hardware.

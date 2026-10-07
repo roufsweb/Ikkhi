@@ -39,6 +39,8 @@ class AudioSettings(BaseModel):
     tts_voice: str = "en-US-AvaNeural"
     tts_rate: str = "+0%"
     tts_pitch: str = "+0Hz"
+    conversation_timeout_seconds: int = 15
+    wake_whisper_device: Literal["cuda", "cpu"] = "cpu"
 
 
 class AITierSettings(BaseModel):

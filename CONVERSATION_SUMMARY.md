@@ -175,5 +175,14 @@
   - **Fixed Neural TTS Sample Rate Crash (`PaErrorCode -9997`):** Discovered that WASAPI playback rejects hardcoded 24000 Hz with `PortAudioError: Invalid sample rate [PaErrorCode -9997]`. Upgraded `src/ikkhi/audio/tts.py` to dynamically query the target device's supported sample rates and adapt PyAV MP3 decoding/resampling in memory (24kHz for MME, 44.1kHz/48kHz for WASAPI) before calling `sd.play()`.
   - **Hardware Report Subsystem (`get_audio_hardware_report`):** Implemented unified inspection of host APIs (MME, WASAPI, DirectSound, WDM-KS), Windows CoreAudio jack states, and resolved routing paths.
   - **Config & CLI Tool Synchronizations:** Added `output_device: null` to `AudioSettings` (`src/ikkhi/core/config.py` and `config.yaml`). Enhanced `scripts/diagnose_interactions.py` and `scripts/test_live_wakeword.py` with dual input and output driver displays.
-  - **Automated Test Suite Expansion:** Added `test_audio_device_auto_resolution` in `tests/unit/test_audio.py`. Verified all **55 of 55 tests passing (100% pass rate)**.
-
+- **Conversational Standby Session & Zero-GPU Wake Spotting Engine (Phase 21):**
+  - **High GPU Usage Root Cause Diagnosed:** Background wake-word detection was invoking the RTX 3070 CUDA Whisper engine every 300-500ms on ambient sound, keeping the GPU constantly active and drawing power.
+  - **Zero-GPU Idle Acoustic Engine (`src/ikkhi/audio/wakeword.py`):** Configured a dedicated CPU int8 Whisper instance (`WhisperModel("tiny.en", device="cpu", compute_type="int8")`) exclusively for wake-word scanning. GPU usage drops to **0.0%** at idle (<0.5% CPU load). Filtered out sub-0.55s audio bursts to eliminate false positive triggers from typing and key clicks.
+  - **Gemini Live-Style Conversational Standby Session (`scripts/test_live_wakeword.py`):**
+    - Implemented `run_conversation_standby()` and real-time dynamic energy VAD (`record_natural_utterance()`).
+    - After waking up with "Hey Ikkhi", the assistant greets the user (*"I'm listening, go ahead"*) and enters a live conversational standby session.
+    - Captures natural speech continuously until ~0.75s of silence is detected, executing user commands and responding aloud.
+    - Keeps the session open for 15 seconds after each turn, allowing continuous follow-up dialog without repeating "Hey Ikkhi".
+    - Automatically detects farewell phrases (*"thank you"*, *"bye"*, *"goodbye"*, *"stop"*, *"exit"*, *"go to sleep"*) to gracefully say goodbye (*"You're welcome! Going to sleep"*) and return to 0% GPU idle monitoring.
+  - **Google AI Studio Model Upgrade & Resiliency:** Resolved HTTP 404 deprecation on retired `gemini-2.5-flash` by upgrading the primary model to `gemini-3.8-flash` in `config.yaml` and `src/ikkhi/ai/router_model.py`.
+  - **Regression Test Suite Verified:** Confirmed all **55 of 55 tests passing (100% pass rate)** in 11.49s.

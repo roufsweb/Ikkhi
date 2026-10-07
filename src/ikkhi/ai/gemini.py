@@ -56,6 +56,9 @@ class GeminiVisualClient:
 
     def resolve_active_model(self) -> str:
         """Resolves the preferred or reasoned model."""
+        avail = self.get_available_models()
+        if self.settings.model_name and (not avail or self.settings.model_name in avail):
+            return self.settings.model_name
         chosen, _, _ = self.orchestrator.select_reasoned_model(
             user_prompt="",
             has_image=True,

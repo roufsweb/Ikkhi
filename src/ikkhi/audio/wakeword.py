@@ -55,6 +55,16 @@ class WakeWordListener:
         self._native_ch = 1
         self._dev_name = "Default"
 
+        # Zero-GPU CPU Whisper engine for low-power idle wake spotting
+        self._cpu_whisper = None
+        if getattr(self.settings, "wake_whisper_device", "cpu") == "cpu":
+            try:
+                from faster_whisper import WhisperModel
+                self._cpu_whisper = WhisperModel("tiny.en", device="cpu", compute_type="int8")
+                logger.info("WakeWordListener loaded low-power CPU int8 model [tiny.en] (0%% GPU idle)")
+            except Exception as exc:
+                logger.debug("CPU Whisper init deferred: %s", exc)
+
     def _audio_callback(self, indata: np.ndarray, frames: int, time_info, status) -> None:
         """Real-time audio callback collecting mono float32 chunks."""
         if not self._running:
@@ -176,44 +186,52 @@ class WakeWordListener:
                         is_in_speech = False
                         silence_chunks = 0
 
-                        if self.stt_engine is not None:
-                            full_audio = np.concatenate(speech_buffer, axis=0)
-                            speech_buffer.clear()
+                        full_audio = np.concatenate(speech_buffer, axis=0)
+                        speech_buffer.clear()
 
-                            # Resample to 16,000 Hz for Whisper if captured at native rate
-                            if self._native_sr != 16000 and len(full_audio) > 0:
-                                target_len = int(len(full_audio) * 16000 / self._native_sr)
-                                if target_len > 0:
-                                    try:
-                                        import scipy.signal
-                                        full_audio = scipy.signal.resample(full_audio, target_len).astype(np.float32)
-                                    except Exception as exc:
-                                        logger.debug("WakeWord resampling error: %s", exc)
+                        # Discard clicks, brief taps, and short acoustic artifacts (<0.55s)
+                        if len(full_audio) < int(self._native_sr * 0.55):
+                            logger.debug("Sound segment too short (<0.55s) for wake word. Ignoring.")
+                            continue
 
-                            try:
-                                logger.info("Transcribing speech segment (%d samples)...", len(full_audio))
+                        # Resample to 16,000 Hz for Whisper if captured at native rate
+                        if self._native_sr != 16000 and len(full_audio) > 0:
+                            target_len = int(len(full_audio) * 16000 / self._native_sr)
+                            if target_len > 0:
+                                try:
+                                    import scipy.signal
+                                    full_audio = scipy.signal.resample(full_audio, target_len).astype(np.float32)
+                                except Exception as exc:
+                                    logger.debug("WakeWord resampling error: %s", exc)
+
+                        clean = ""
+                        try:
+                            # Primary Zero-GPU Path: CPU int8 Whisper
+                            if self._cpu_whisper is not None:
+                                segments, _ = self._cpu_whisper.transcribe(full_audio, beam_size=1, language="en")
+                                clean = " ".join([s.text for s in segments]).lower().strip()
+                            elif self.stt_engine is not None:
                                 transcript, _ = self.stt_engine.transcribe(full_audio)
                                 clean = transcript.lower().strip()
-                                if clean:
-                                    logger.info("Acoustic listener heard: '%s'", clean)
 
-                                # Check against all phonetic variations of wake triggers
-                                matched_kw = None
-                                for kw in self.WAKE_KEYWORDS:
-                                    if kw in clean:
-                                        matched_kw = kw
-                                        break
+                            if clean:
+                                logger.info("Acoustic listener heard: '%s'", clean)
 
-                                if matched_kw:
-                                    logger.info(">>> [WAKE-WORD MATCHED!] Trigger: '%s' in: '%s' <<<", matched_kw, clean)
-                                    cooldown_until = now + 2.0
-                                    # Extract remainder command if uttered in same sentence
-                                    remainder = clean.split(matched_kw, 1)[-1].strip(" ,.!?")
-                                    self.on_wake(matched_kw, remainder if remainder else None)
-                            except Exception as exc:
-                                logger.debug("Wake verification transcribe error: %s", exc)
-                        else:
-                            speech_buffer.clear()
+                            # Check against all phonetic variations of wake triggers
+                            matched_kw = None
+                            for kw in self.WAKE_KEYWORDS:
+                                if kw in clean:
+                                    matched_kw = kw
+                                    break
+
+                            if matched_kw:
+                                logger.info(">>> [WAKE-WORD MATCHED!] Trigger: '%s' in: '%s' <<<", matched_kw, clean)
+                                cooldown_until = now + 2.0
+                                # Extract remainder command if uttered in same sentence
+                                remainder = clean.split(matched_kw, 1)[-1].strip(" ,.!?")
+                                self.on_wake(matched_kw, remainder if remainder else None)
+                        except Exception as exc:
+                            logger.debug("Wake verification transcribe error: %s", exc)
                 else:
                     speech_buffer.clear()
 

@@ -16,8 +16,8 @@
 
 ## 2. Technical Stack & Invariants
 - **Language & Runtime:** Python 3.12 (PEP 517/621 `src-layout` with `pyproject.toml`).
-- **Local Audio & Voice:** `sounddevice` + `faster-whisper` (RTX 3070 CUDA) + Edge Neural TTS (`en-US-AvaNeural`, Google Assistant style) + Adaptive Wake-Word Listener (Hey Ikkhi / Siri / Google / Jarvis) with automatic active mic & speaker driver negotiation (WASAPI/MME/DirectSound).
-- **Dynamic AI Model Orchestration:** Reasoned model selection (`router_model.py`) parses task characteristics (vision vs deep logic) with multi-model fallback across 46 active models.
+- **Local Audio & Voice:** `sounddevice` + `faster-whisper` (RTX 3070 CUDA conversational STT + CPU int8 wake spotter with 0.0% GPU idle) + Edge Neural TTS (`en-US-AvaNeural`, Google Assistant style) + Gemini Live-style conversational standby session (dynamic energy VAD, natural multi-turn dialog, 15s timeout).
+- **Dynamic AI Model Orchestration:** Reasoned model selection (`router_model.py`) with `gemini-3.8-flash` primary model, task-aware routing, and multi-model fallback across active models.
 - **GUI Desktop Companion:** PyQt6 frameless translucent floating HUD overlay with reactive multi-bar RMS waveform, Windows system tray applet, and dark-mode settings/token analytics dashboard.
 - **Persistent Logging & Correlation:** Dual output console + rotating `storage/ikkhi.log` capturing every hardware key, window change, audio RMS, Whisper STT, and action execution.
 - **Standalone Distribution:** Single-file standalone Windows executable (`dist/Ikkhi.exe`, 181.51 MB) compiled via PyInstaller with zero client dependencies.
@@ -27,8 +27,8 @@
 ## 3. Current Verification State & Metrics
 | Metric | Value | Verification Status |
 | :--- | :--- | :--- |
-| **Active Milestones** | 18 of 18 Phases Completed | 100% Complete |
-| **Automated Test Suite** | 55 / 55 Tests Passing | 100% Pass Rate (8.68s) |
+| **Active Milestones** | 20 of 20 Phases Completed | 100% Complete |
+| **Automated Test Suite** | 55 / 55 Tests Passing | 100% Pass Rate (11.49s) |
 | **Standalone Binary** | `dist/Ikkhi.exe` (181.51 MB) | Compiled & Verified |
 | **Hardware Grounding** | Windows 11, RTX 3070 CUDA, 4K Display, USB Mic + Headphones | Auto-Detected & Wired |
 | **Remote Repository** | `https://github.com/roufsweb/Ikkhi` | Synced on `main` |

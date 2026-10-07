@@ -25,11 +25,13 @@ audio:
   tts_voice: "en-US-AvaNeural" # Ava or Aria sounds like Google Assistant
   input_device: null # null for smart auto-detection, or specific integer index
   output_device: null # null for smart auto-detection, or specific integer index
+  conversation_timeout_seconds: 15 # Multi-turn conversational standby duration
+  wake_whisper_device: "cpu" # "cpu" keeps GPU at 0% power during idle wake-word listening
 
 ai_tier:
   # Google AI Studio settings (strictly on-demand)
   enable_cloud_fallback: true
-  model_name: "gemini-2.5-flash"
+  model_name: "gemini-3.8-flash"
   auto_select_model: true # Query API first to verify model availability before commanding
   max_output_tokens: 350
   temperature: 0.1

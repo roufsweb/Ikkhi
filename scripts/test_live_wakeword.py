@@ -76,45 +76,129 @@ def run_live_test():
     except Exception as exc:
         logger.warning("Whisper pre-warm deferred: %s", exc)
 
-    is_processing = False
+    is_session_active = False
+    session_lock = threading.Lock()
+
+    FAREWELL_KEYWORDS = [
+        "bye", "goodbye", "stop", "cancel", "thank you", "thanks", "go to sleep",
+        "exit", "quit", "never mind", "that's all", "that is all"
+    ]
+
+    def record_natural_utterance(max_wait_seconds: float = 12.0) -> Optional[np.ndarray]:
+        """
+        Dynamically records user speech using Voice Activity Detection (VAD).
+        Waits until the user speaks, captures until they pause for ~0.75s, then returns the audio.
+        """
+        capture.start_recording()
+        t_start = time.time()
+        in_speech = False
+        silence_start = 0.0
+        speech_started_at = 0.0
+
+        while time.time() - t_start < max_wait_seconds:
+            time.sleep(0.06)
+            rms = capture.get_live_rms()
+            threshold = 0.0018  # Conversational speech threshold
+
+            if rms >= threshold:
+                if not in_speech:
+                    in_speech = True
+                    speech_started_at = time.time()
+                    logger.info("  [Voice Activity] (RMS: %.5f) User speaking...", rms)
+                silence_start = 0.0
+            else:
+                if in_speech:
+                    if silence_start == 0.0:
+                        silence_start = time.time()
+                    elif (time.time() - silence_start >= 0.75) and (time.time() - speech_started_at >= 0.4):
+                        break
+
+        audio = capture.stop_recording()
+        if in_speech and len(audio) > 8000:
+            return audio
+        return None
+
+    def run_conversation_standby(initial_cmd: Optional[str] = None):
+        """
+        Multi-turn conversational standby session (Gemini style).
+        Keeps listening for follow-up questions/commands without requiring the wake word again.
+        """
+        nonlocal is_session_active
+        with session_lock:
+            if is_session_active:
+                return
+            is_session_active = True
+
+        logger.info("=" * 65)
+        logger.info(">>> [CONVERSATION STANDBY ACTIVE] Multi-turn dialog online <<<")
+        logger.info(">>> Speak your command or follow-up freely. Say 'bye' or 'thank you' to exit. <<<")
+        logger.info("=" * 65)
+
+        # 1. Handle initial command if uttered with wake word, otherwise give warm prompt
+        if initial_cmd:
+            logger.info("Executing initial intent: \"%s\"", initial_cmd)
+            res = orchestrator.process_transcript(initial_cmd)
+            logger.info(">>> Response: %s", res)
+            orchestrator.speech_engine.speak(res, wait=True)
+        else:
+            orchestrator.speech_engine.speak("I'm listening, go ahead.", wait=True)
+
+        # 2. Continuous Standby Conversation Loop
+        timeout_seconds = getattr(config.audio, "conversation_timeout_seconds", 15)
+
+        while True:
+            logger.info("[STANDBY] Listening for speech (Session Timeout: %ds)...", timeout_seconds)
+            audio = record_natural_utterance(max_wait_seconds=timeout_seconds)
+
+            if audio is None or len(audio) == 0:
+                logger.info("[STANDBY TIMEOUT] 15s of silence elapsed. Exiting conversation.")
+                orchestrator.speech_engine.speak("Standing by whenever you need me.", wait=False)
+                break
+
+            logger.info("Transcribing conversational turn on CUDA...")
+            transcript, _ = stt_engine.transcribe(audio)
+            clean = transcript.strip()
+
+            if not clean or clean in (".", "...", ". . . ."):
+                logger.info("Acoustic blip ignored. Continuing standby.")
+                continue
+
+            logger.info(">>> User: \"%s\"", clean)
+            clean_lower = clean.lower().strip(" ,.!?")
+
+            # Check for farewell or exit keywords
+            if any(fw in clean_lower for fw in FAREWELL_KEYWORDS):
+                logger.info("Farewell keyword recognized: '%s'. Closing conversation session.", clean)
+                orchestrator.speech_engine.speak("You're welcome! Going to sleep.", wait=True)
+                break
+
+            # Execute user action / Gemini query and speak reply
+            res = orchestrator.process_transcript(clean)
+            logger.info(">>> Assistant: %s", res)
+            orchestrator.speech_engine.speak(res, wait=True)
+
+        with session_lock:
+            is_session_active = False
+
+        logger.info("=" * 65)
+        logger.info(">>> Returned to low-power idle wake-word monitoring (0%% GPU) <<<")
+        logger.info("=" * 65)
 
     def on_wake_detected(trigger_name: str, direct_cmd: str | None):
-        nonlocal is_processing
-        if is_processing:
+        if is_session_active:
             return
-        is_processing = True
 
         logger.info("*" * 55)
         logger.info(">>> [WAKE DETECTED!] Wake word recognized via: '%s' <<<", trigger_name)
         logger.info("*" * 55)
 
-        if direct_cmd:
-            logger.info("Direct command identified: \"%s\"", direct_cmd)
-            logger.info("Executing deterministic action...")
-            res = orchestrator.process_transcript(direct_cmd)
-            logger.info(">>> Execution Result: %s", res)
-            is_processing = False
-        else:
-            logger.info("Assistant awakened! Awaiting voice command...")
-            orchestrator.speech_engine.speak("I'm listening.")
-            logger.info(">>> SPEAK YOUR COMMAND NOW (e.g., 'volume up', 'read text', 'cut') <<<")
-            capture.start_recording()
-            time.sleep(3.0)
-            audio = capture.stop_recording()
-
-            if len(audio) > 0:
-                logger.info("Transcribing speech on CUDA...")
-                transcript, _ = stt_engine.transcribe(audio)
-                clean = transcript.strip()
-                if clean:
-                    logger.info(">>> Spoken Command: \"%s\"", clean)
-                    res = orchestrator.process_transcript(clean)
-                    logger.info(">>> Execution Result: %s", res)
-                else:
-                    logger.info("No speech detected in audio segment.")
-            else:
-                logger.info("Audio buffer empty.")
-            is_processing = False
+        # Launch conversational standby session in background worker
+        threading.Thread(
+            target=run_conversation_standby,
+            args=(direct_cmd,),
+            daemon=True,
+            name="Ikkhi-Conversation-Session"
+        ).start()
 
     # Start Wake Word Listener
     wake_listener = WakeWordListener(
@@ -137,8 +221,12 @@ def run_live_test():
             clean = transcript.strip()
             if clean:
                 logger.info(">>> Spoken: \"%s\"", clean)
-                res = orchestrator.process_transcript(clean)
-                logger.info(">>> Execution Result: %s", res)
+                threading.Thread(
+                    target=run_conversation_standby,
+                    args=(clean,),
+                    daemon=True,
+                    name="Ikkhi-PTT-Conversation-Session"
+                ).start()
 
     ptt_listener = PushToTalkListener(
         settings=config.audio,

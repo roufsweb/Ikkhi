@@ -264,5 +264,14 @@ To ensure zero guesswork for future AI agents and developers, every feature and 
 - [x] Added unit test `test_audio_device_auto_resolution` in [`tests/unit/test_audio.py`](file:///e:/rouf/software-project/Ikkhi/tests/unit/test_audio.py)
 - [x] Verified full regression test suite passing at **55/55 tests (100% pass rate)**
 
-
-
+### Phase 20: Conversational Standby Session & Zero-GPU Wake Spotting Engine
+- [x] Diagnosed high GPU power usage and battery drain caused by background wake-word acoustic scanning invoking CUDA cores
+- [x] Implemented dedicated CPU int8 Whisper spotter (`tiny.en`, `compute_type="int8"`) in [`src/ikkhi/audio/wakeword.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/audio/wakeword.py), dropping idle GPU usage to **0.0%**
+- [x] Added short-noise filtering discarding sub-0.55s audio bursts to eliminate false positive triggers from keyboard clicks and typing
+- [x] Implemented Gemini Live-style Conversational Standby Session Engine in [`scripts/test_live_wakeword.py`](file:///e:/rouf/software-project/Ikkhi/scripts/test_live_wakeword.py):
+  - Natural dynamic energy VAD (`record_natural_utterance()`): dynamically records complete utterances until ~0.75s of silence
+  - Multi-turn conversational standby loop (`run_conversation_standby()`): keeps the assistant awake for 15s after responding, enabling natural follow-up questions without repeating "Hey Ikkhi"
+  - Polite farewell detector: automatically recognizes "thank you", "bye", "goodbye", "stop", "exit", or "go to sleep" and gracefully returns to 0% GPU idle
+- [x] Upgraded Google AI Studio client in [`config.yaml`](file:///e:/rouf/software-project/Ikkhi/config.yaml) and [`src/ikkhi/ai/router_model.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/ai/router_model.py) to prioritize `gemini-3.8-flash`, resolving HTTP 404 deprecation on retired models
+- [x] Added `conversation_timeout_seconds: 15` and `wake_whisper_device: "cpu"` to `AudioSettings` in [`src/ikkhi/core/config.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/core/config.py)
+- [x] Verified 100% regression test pass rate across **55/55 tests (100% pass rate)** in 11.49s
