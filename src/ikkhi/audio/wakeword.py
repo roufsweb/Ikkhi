@@ -4,6 +4,7 @@ Listens continuously for trigger phrases ("hey ikkhi", "hey ikki", "hey siri", "
 utilizing dynamic ambient noise calibration and fast CUDA transcription with <1% CPU footprint.
 """
 
+import re
 import time
 import queue
 import logging
@@ -27,9 +28,11 @@ class WakeWordListener:
 
     # Extended phonetic variations and common assistant triggers for natural invocation
     WAKE_KEYWORDS = [
-        "hey ikkhi", "hey ikki", "hey eki", "hey iki", "hey ikhi",
+        "hey ikkhi", "hey ikki", "hey eki", "hey iki", "hey ikhi", "hey ikky", "ikky",
         "hey iggy", "hey itchy", "hey cookie", "hey key", "hey, ikkhi", "hey, ikki",
-        "ikkhi", "ikki", "ickey", "iki", "ikhi", "hi ikkhi", "hi ikki",
+        "hey k", "hey, k", "hey kay", "hey, kay", "hey kiki", "kiki", "hey keke",
+        "hey ike", "hey aki", "hey akiya", "hey acute", "hey ok", "hey i key", "hey a key",
+        "ikkhi", "ikki", "ickey", "iki", "ikhi", "hi ikkhi", "hi ikki", "hello ikkhi",
         "hey assistant", "assistant", "hey siri", "hey google", "hey jarvis", "jarvis", "computer"
     ]
 
@@ -218,9 +221,14 @@ class WakeWordListener:
                                 logger.info("Acoustic listener heard: '%s'", clean)
 
                             # Check against all phonetic variations of wake triggers
+                            clean_norm = re.sub(r"[^\w\s]", " ", clean)
+                            clean_norm = " ".join(clean_norm.split())
+
                             matched_kw = None
                             for kw in self.WAKE_KEYWORDS:
-                                if kw in clean:
+                                kw_norm = " ".join(re.sub(r"[^\w\s]", " ", kw).split())
+                                pattern = r"\b" + re.escape(kw_norm) + r"\b"
+                                if re.search(pattern, clean_norm) or kw in clean:
                                     matched_kw = kw
                                     break
 
