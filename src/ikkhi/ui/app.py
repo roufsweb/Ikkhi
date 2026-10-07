@@ -52,6 +52,8 @@ class IkkhiApplication:
         # Controller -> Overlay
         self.controller.state_changed.connect(self.overlay.set_state)
         self.controller.rms_updated.connect(self.overlay.update_rms)
+        self.controller.context_changed.connect(self.overlay.set_active_app)
+        self.controller.tier_dispatched.connect(self.overlay.set_tier_feedback)
 
         # Controller -> Dashboard History & Metrics
         self.controller.command_logged.connect(self.dashboard.log_command)

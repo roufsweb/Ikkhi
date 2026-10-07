@@ -92,7 +92,7 @@ e:/rouf/software-project/Ikkhi/
 │           ├── beacon.py                   # HeyClicky-style visual target beacon & cursor ripple indicator
 │           └── app.py                      # Master Qt application coordinator & window manager
 │
-├── tests/                                  # Comprehensive automated test suite (46 tests)
+├── tests/                                  # Comprehensive automated test suite (47 tests)
 │   ├── __init__.py
 │   ├── integration/                        # End-to-end integration tests
 │   │   ├── __init__.py
@@ -394,7 +394,7 @@ e:/rouf/software-project/Ikkhi/
 ### 📁 `src/ikkhi/ui/` — Standalone Desktop Graphical User Interface
 - **Domain / Job:** Graphical presentation layer; delivers a frameless translucent floating companion HUD pill with reactive audio waveforms, Windows Shell tray applet, and dark-mode settings/token analytics dashboard.
 - **Parent / Inbound Callers:** `src/ikkhi/__main__.py`, `scripts/test_live_gui.py`.
-- **Submodules & Children:** `theme.py`, `overlay.py`, `tray.py`, `dashboard.py`, `controller.py`, `app.py`.
+- **Submodules & Children:** `theme.py`, `overlay.py`, `tray.py`, `dashboard.py`, `controller.py`, `beacon.py`, `app.py`.
 
 #### 📄 [`src/ikkhi/ui/theme.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/ui/theme.py)
 - **Job / Core Duty:** Design tokens, obsidian dark-mode stylesheet (`DARK_THEME_QSS`), typography stacks, glassmorphic card classes, and tactile keycap badge styles.
@@ -404,10 +404,10 @@ e:/rouf/software-project/Ikkhi/
 - **Resource Profile:** Static QSS stylesheet string.
 
 #### 📄 [`src/ikkhi/ui/overlay.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/ui/overlay.py)
-- **Job / Core Duty:** Frameless, translucent, always-on-top companion HUD pill widget (`Qt.WindowType.Tool`) that never steals window focus; contains glowing monogram, title, subtitle, indeterminate progress bar, and reactive multi-bar audio waveform.
+- **Job / Core Duty:** Frameless, translucent, always-on-top companion HUD pill widget (`Qt.WindowType.Tool`) that never steals window focus; contains glowing monogram, title, subtitle, active application context chip, execution tier feedback badge, indeterminate progress bar, and reactive harmonic formant audio waveform.
 - **Inbound Connections:** `app.py`, `test_ui.py`.
 - **Outbound Connections:** `PyQt6.QtWidgets`, `PyQt6.QtGui`, `PyQt6.QtCore`, `src/ikkhi/ui/theme.py`.
-- **Key Interfaces:** `FloatingCompanionOverlay`, `AudioWaveformVisualizer`, `set_state(state: str, detail: str)`, `update_rms(level: float)`.
+- **Key Interfaces:** `FloatingCompanionOverlay`, `AudioWaveformVisualizer`, `set_state(state: str, detail: str)`, `update_rms(level: float)`, `set_active_app(app_name: str)`, `set_tier_feedback(tier_label: str)`.
 - **Resource Profile:** Double-buffered anti-aliased custom painting (60 FPS, <1% GPU usage).
 
 #### 📄 [`src/ikkhi/ui/tray.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/ui/tray.py)
@@ -425,10 +425,10 @@ e:/rouf/software-project/Ikkhi/
 - **Resource Profile:** Standard Qt window with virtual table scrolling.
 
 #### 📄 [`src/ikkhi/ui/controller.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/ui/controller.py)
-- **Job / Core Duty:** Asynchronous controller bridging hardware listeners with Qt GUI; runs Whisper GPU transcription in a dedicated `QThread` (`AudioInferenceWorker`) and streams real-time microphone RMS volume via a 40 FPS timer.
+- **Job / Core Duty:** Asynchronous controller bridging hardware listeners with Qt GUI; runs Whisper GPU transcription in a dedicated `QThread` (`AudioInferenceWorker`), polls active foreground application context, and streams real-time microphone RMS volume via a 40 FPS timer.
 - **Inbound Connections:** `app.py`.
 - **Outbound Connections:** `PyQt6.QtCore.QThread`, `src/ikkhi/audio/capture.py`, `src/ikkhi/audio/stt.py`, `src/ikkhi/audio/hotkey.py`, `src/ikkhi/audio/wakeword.py`, `src/ikkhi/core/orchestrator.py`.
-- **Key Interfaces:** `GUIController`, `AudioInferenceWorker`, `state_changed`, `rms_updated`, `command_logged`, `start_listeners()`, `stop_listeners()`.
+- **Key Interfaces:** `GUIController`, `AudioInferenceWorker`, `state_changed`, `rms_updated`, `command_logged`, `context_changed`, `tier_dispatched`, `start_listeners()`, `stop_listeners()`.
 - **Resource Profile:** Non-blocking async worker; guarantees uncompromised 60 FPS GUI responsiveness.
 
 #### 📄 [`src/ikkhi/ui/beacon.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/ui/beacon.py)
@@ -468,7 +468,7 @@ e:/rouf/software-project/Ikkhi/
 ---
 
 ### 📁 `tests/` — Automated Unit & Integration Test Suite
-- **Domain / Job:** Automated verification framework guaranteeing 100% regression safety, type fidelity, defensive security, and performance constraints across all 46 test cases.
+- **Domain / Job:** Automated verification framework guaranteeing 100% regression safety, type fidelity, defensive security, and performance constraints across all 47 test cases.
 - **Parent / Inbound Callers:** `pytest`, developer CI workflows.
 - **Submodules & Children:** `integration/`, `unit/`.
 

@@ -65,6 +65,8 @@ class GUIController(QObject):
     state_changed = pyqtSignal(str, str)              # (state_name, detail_text)
     rms_updated = pyqtSignal(float)                   # (normalized_rms_0_to_1)
     command_logged = pyqtSignal(str, str, str, str)   # (timestamp, utterance, tier, response)
+    context_changed = pyqtSignal(str)                 # (active_app_name)
+    tier_dispatched = pyqtSignal(str)                 # (tier_name)
 
     def __init__(self, config: AppConfig) -> None:
         super().__init__()
@@ -80,6 +82,11 @@ class GUIController(QObject):
         self._rms_timer = QTimer(self)
         self._rms_timer.setInterval(25)
         self._rms_timer.timeout.connect(self._poll_live_rms)
+
+        # Context polling timer to detect active creative foreground application
+        self._context_timer = QTimer(self)
+        self._context_timer.setInterval(1000)
+        self._context_timer.timeout.connect(self._poll_active_context)
 
         # Setup Push-to-Talk global keyboard listener
         self.hotkey_listener = PushToTalkListener(
@@ -112,6 +119,10 @@ class GUIController(QObject):
             except Exception as exc:
                 logger.warning("Could not start wake-word listener: %s", exc)
 
+        # Start context polling timer and emit initial context
+        self._context_timer.start()
+        self._poll_active_context()
+
         # Pre-warm local Whisper model
         try:
             self.stt_engine.load_model()
@@ -122,6 +133,8 @@ class GUIController(QObject):
         """Safely release audio resources and terminate keyboard hooks."""
         if self._rms_timer.isActive():
             self._rms_timer.stop()
+        if self._context_timer.isActive():
+            self._context_timer.stop()
         try:
             self.hotkey_listener.stop()
         except Exception:
@@ -133,6 +146,47 @@ class GUIController(QObject):
                 pass
         self.capture_engine.close()
         self.orchestrator.speech_engine.stop()
+
+    def _poll_active_context(self) -> None:
+        """Query host OS for currently focused foreground application."""
+        app_name = self.get_foreground_app_name()
+        self.context_changed.emit(app_name)
+
+    @staticmethod
+    def get_foreground_app_name() -> str:
+        """Inspects active window handle and resolves friendly creative app name."""
+        try:
+            import win32gui
+            hwnd = win32gui.GetForegroundWindow()
+            if hwnd:
+                title = win32gui.GetWindowText(hwnd).strip()
+                if not title:
+                    return "Desktop"
+                title_lower = title.lower()
+                if "resolve" in title_lower or "davinci" in title_lower:
+                    return "DaVinci Resolve"
+                if "premiere" in title_lower:
+                    return "Premiere Pro"
+                if "blender" in title_lower:
+                    return "Blender 3D"
+                if "photoshop" in title_lower:
+                    return "Photoshop"
+                if "visual studio code" in title_lower or "code" in title_lower:
+                    return "VS Code"
+                if "chrome" in title_lower:
+                    return "Chrome"
+                if "edge" in title_lower:
+                    return "Edge"
+                if "ableton" in title_lower:
+                    return "Ableton Live"
+                if "after effects" in title_lower:
+                    return "After Effects"
+                if "figma" in title_lower:
+                    return "Figma"
+                return title[:18] + "…" if len(title) > 18 else title
+        except Exception:
+            pass
+        return "Desktop"
 
     def _poll_live_rms(self) -> None:
         """Poll the physical audio capture engine for live RMS volume."""
@@ -197,6 +251,7 @@ class GUIController(QObject):
     def _handle_inference_success(self, transcript: str, tier: str, response: str) -> None:
         now_str = datetime.now().strftime("%H:%M:%S")
         self.state_changed.emit("speaking", f'"{transcript}" → {response}')
+        self.tier_dispatched.emit(tier)
         self.command_logged.emit(now_str, transcript, tier, response)
 
     @pyqtSlot(str)
@@ -212,5 +267,6 @@ class GUIController(QObject):
         self.state_changed.emit("processing", f"Executing: {command_text}")
         response = self.orchestrator.process_transcript(command_text)
         self.state_changed.emit("speaking", response)
+        self.tier_dispatched.emit(tier_name)
         self.command_logged.emit(now_str, command_text, tier_name, response)
         return response

@@ -56,9 +56,13 @@ class AudioWaveformVisualizer(QWidget):
         center_y = h / 2.0
 
         for i in range(self.bar_count):
-            # Harmonic variation per bar
-            harmonic = math.sin(self.phase + i * 1.1) * 0.35 + 0.65
-            amp = max(0.15, self.current_rms * harmonic)
+            # Center-weighted harmonic bell curve for natural voice formant distribution
+            center_idx = (self.bar_count - 1) / 2.0
+            dist = abs(i - center_idx)
+            bell_weight = max(0.45, 1.0 - (dist / (center_idx + 1.0)) ** 1.3)
+
+            harmonic = (math.sin(self.phase + i * 1.05) * 0.35 + 0.65) * bell_weight
+            amp = max(0.12, self.current_rms * harmonic)
             bar_h = max(4.0, amp * (h - 6))
 
             x = start_x + i * (bar_w + spacing)
@@ -66,8 +70,8 @@ class AudioWaveformVisualizer(QWidget):
 
             # Gradient from electric cyan to vibrant violet
             grad = QLinearGradient(x, y, x, y + bar_h)
-            grad.setColorAt(0.0, QColor(0, 229, 255, 230))
-            grad.setColorAt(1.0, QColor(168, 85, 247, 230))
+            grad.setColorAt(0.0, QColor(0, 229, 255, 240))
+            grad.setColorAt(1.0, QColor(168, 85, 247, 240))
 
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QBrush(grad))
@@ -100,7 +104,7 @@ class FloatingCompanionOverlay(QWidget):
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, True)
-        self.setMinimumWidth(260)
+        self.setMinimumWidth(280)
         self.setFixedHeight(54)
 
     def _init_ui(self) -> None:
@@ -108,7 +112,7 @@ class FloatingCompanionOverlay(QWidget):
         main_layout = QHBoxLayout(self)
         main_layout.setContentsMargins(8, 6, 8, 6)
 
-        # Frosted glass container container
+        # Frosted glass container
         self.container = QFrame(self)
         self.container.setObjectName("hudContainer")
         self.container.setProperty("state", "idle")
@@ -151,6 +155,35 @@ class FloatingCompanionOverlay(QWidget):
         text_layout.addWidget(self.title_label)
         text_layout.addWidget(self.detail_label)
 
+        # Context badge (Active creative application)
+        self.context_badge = QLabel("Desktop", self.container)
+        self.context_badge.setObjectName("contextBadge")
+        self.context_badge.setStyleSheet(
+            "background-color: rgba(255, 255, 255, 0.06);"
+            "color: #38bdf8;"
+            "border: 1px solid rgba(255, 255, 255, 0.12);"
+            "border-radius: 6px;"
+            "padding: 2px 7px;"
+            "font-family: 'JetBrains Mono', 'Segoe UI Variable', monospace;"
+            "font-size: 10px;"
+            "font-weight: 600;"
+        )
+
+        # Tier / Cost feedback badge
+        self.tier_badge = QLabel("⚡ 0ms • $0.00", self.container)
+        self.tier_badge.setObjectName("tierBadge")
+        self.tier_badge.setStyleSheet(
+            "background-color: rgba(16, 185, 129, 0.14);"
+            "color: #34d399;"
+            "border: 1px solid rgba(16, 185, 129, 0.35);"
+            "border-radius: 6px;"
+            "padding: 2px 7px;"
+            "font-family: 'JetBrains Mono', 'Segoe UI Variable', monospace;"
+            "font-size: 10px;"
+            "font-weight: 700;"
+        )
+        self.tier_badge.setVisible(False)
+
         # Reactive Waveform visualizer
         self.waveform = AudioWaveformVisualizer(self.container)
         self.waveform.setVisible(False)
@@ -168,6 +201,8 @@ class FloatingCompanionOverlay(QWidget):
 
         container_layout.addWidget(self.monogram_label)
         container_layout.addLayout(text_layout)
+        container_layout.addWidget(self.context_badge)
+        container_layout.addWidget(self.tier_badge)
         container_layout.addWidget(self.waveform)
         container_layout.addWidget(self.progress_bar)
 
@@ -182,6 +217,33 @@ class FloatingCompanionOverlay(QWidget):
     @pyqtSlot()
     def _revert_to_idle(self) -> None:
         self.set_state("idle", "Hold Ctrl+Alt+Space to speak")
+
+    def set_active_app(self, app_name: str) -> None:
+        """Dynamically ground the HUD pill with the active application name."""
+        clean_name = app_name.strip() or "Desktop"
+        if len(clean_name) > 20:
+            clean_name = clean_name[:18] + "…"
+        self.context_badge.setText(clean_name)
+        self.adjustSize()
+
+    def set_tier_feedback(self, tier_label: str) -> None:
+        """Flash execution tier feedback badge."""
+        if "Tier 0" in tier_label or "Local" in tier_label:
+            self.tier_badge.setText("⚡ 0ms • $0.00")
+            self.tier_badge.setStyleSheet(
+                "background-color: rgba(16, 185, 129, 0.14); color: #34d399; "
+                "border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 6px; "
+                "padding: 2px 7px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;"
+            )
+        else:
+            self.tier_badge.setText("☁️ Gemini Flash")
+            self.tier_badge.setStyleSheet(
+                "background-color: rgba(168, 85, 247, 0.16); color: #c084fc; "
+                "border: 1px solid rgba(168, 85, 247, 0.35); border-radius: 6px; "
+                "padding: 2px 7px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;"
+            )
+        self.tier_badge.setVisible(True)
+        self.adjustSize()
 
     def set_state(self, state: str, detail: str = "") -> None:
         """
@@ -202,6 +264,7 @@ class FloatingCompanionOverlay(QWidget):
             self.detail_label.setText(detail or "Speak into microphone...")
             self.waveform.setVisible(True)
             self.progress_bar.setVisible(False)
+            self.tier_badge.setVisible(False)
 
         elif state == "processing":
             self._revert_timer.stop()
@@ -212,6 +275,7 @@ class FloatingCompanionOverlay(QWidget):
             self.detail_label.setText(detail or "Transcribing on CUDA...")
             self.waveform.setVisible(False)
             self.progress_bar.setVisible(True)
+            self.tier_badge.setVisible(False)
 
         elif state == "speaking":
             self.monogram_label.setStyleSheet(
@@ -221,6 +285,7 @@ class FloatingCompanionOverlay(QWidget):
             self.detail_label.setText(detail)
             self.waveform.setVisible(False)
             self.progress_bar.setVisible(False)
+            self.tier_badge.setVisible(True)
             # Revert back to idle after 4.5 seconds
             self._revert_timer.start(4500)
 
@@ -232,6 +297,7 @@ class FloatingCompanionOverlay(QWidget):
             self.detail_label.setText(detail or "Say 'Hey Ikkhi' or Hold Ctrl+Alt+Space")
             self.waveform.setVisible(False)
             self.progress_bar.setVisible(False)
+            self.tier_badge.setVisible(False)
 
         self.adjustSize()
 
