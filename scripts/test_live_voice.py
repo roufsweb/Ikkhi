@@ -33,17 +33,33 @@ def run_diagnostics():
     default_in = sd.query_devices(kind="input")
     default_out = sd.query_devices(kind="output")
 
-    print(f"  • Default Audio Input Device:  {default_in['name']}")
+    dev_idx = getattr(config.audio, "input_device", None)
+    if dev_idx is not None:
+        try:
+            in_dev_info = sd.query_devices(dev_idx)
+            print(f"  • Configured Audio Input:      [{dev_idx}] {in_dev_info['name']}")
+        except Exception:
+            print(f"  • Default Audio Input Device:  {default_in['name']}")
+    else:
+        print(f"  • Default Audio Input Device:  {default_in['name']}")
+        if "cable" in default_in['name'].lower() or "virtual" in default_in['name'].lower():
+            print("    [NOTICE] Default device is VB-Audio Virtual Cable. If your physical mic is plugged in,")
+            print("    set 'input_device: <index>' in config.yaml or select it in the Control Panel.")
+            print("    Detected microphones on your system:")
+            for idx, d in enumerate(devices):
+                if d['max_input_channels'] > 0:
+                    print(f"      • Device [{idx}]: {d['name']}")
+
     print(f"  • Default Audio Output Device: {default_out['name']}")
     print(f"  • Sample Rate:                {config.audio.sample_rate} Hz")
 
     # 2. Test Audio Capture with Live RMS Energy Meter
-    print_banner("Step 2/4: Live Microphone Capture & RMS Energy Meter")
+    print_banner("Step 2/5: Live Microphone Capture & RMS Energy Meter")
     print("Preparing to record for 3 seconds...")
     print("Please SPEAK aloud into your microphone (e.g., 'Hey Ikkhi, test microphone').\n")
     
     for count in range(3, 0, -1):
-        print(f"  Starting in {count}...", end="\r")
+        print(f"  Starting in {count}...", end="\r", flush=True)
         time.sleep(1)
 
     print("\n>>> RECORDING ACTIVE! SPEAK NOW! <<<")
@@ -54,7 +70,13 @@ def run_diagnostics():
     start_time = time.time()
     while time.time() - start_time < 3.0:
         time.sleep(0.1)
+        cur_rms = capture.get_live_rms()
+        bars = int(min(1.0, cur_rms * 15) * 25)
+        bar_str = "█" * bars + "░" * (25 - bars)
+        remaining = max(0.0, 3.0 - (time.time() - start_time))
+        print(f"  [Recording {remaining:.1f}s] RMS: {cur_rms:.4f} [{bar_str}]", end="\r", flush=True)
 
+    print()
     audio_buffer = capture.stop_recording()
     capture.close()
     
@@ -68,7 +90,7 @@ def run_diagnostics():
 
     print(f"\n[Capture Complete]")
     print(f"  • Duration:      {duration_secs:.2f} seconds ({total_samples} samples)")
-    print(f"  • RMS Amplitude: {rms_volume:.5f} [{meter_str}]")
+    print(f"  • Total RMS:     {rms_volume:.5f} [{meter_str}]")
 
     if rms_volume < 0.001:
         print("\n[WARNING] Very low audio energy detected! Please check your microphone mute switch or volume.")

@@ -53,8 +53,16 @@ class AudioCaptureEngine:
 
         self._is_recording = True
         try:
+            dev_idx = getattr(self.settings, "input_device", None)
+            if dev_idx is not None and isinstance(dev_idx, str):
+                try:
+                    dev_idx = int(dev_idx)
+                except ValueError:
+                    pass
+
             if self._stream is None or not self._stream.active:
                 self._stream = sd.InputStream(
+                    device=dev_idx,
                     samplerate=self.sample_rate,
                     channels=1,
                     dtype="float32",

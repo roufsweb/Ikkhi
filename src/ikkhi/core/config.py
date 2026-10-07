@@ -4,7 +4,7 @@ Configuration management system for Ikkhi using Pydantic Settings.
 
 import os
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 import yaml
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
@@ -33,6 +33,7 @@ class AudioSettings(BaseModel):
     whisper_model: str = "base.en"
     whisper_device: Literal["cuda", "cpu"] = "cuda"
     compute_type: Literal["float16", "int8_float16", "int8"] = "float16"
+    input_device: Optional[int | str] = None
 
 
 class AITierSettings(BaseModel):

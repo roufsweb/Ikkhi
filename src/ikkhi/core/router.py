@@ -31,11 +31,11 @@ class IntentRouter:
     # Fast-path pattern definitions: (Compiled regex, Action identifier, default kwargs)
     LOCAL_PATTERNS = [
         # Media & Playback controls
-        (re.compile(r"^\b(play|pause|resume|toggle playback)\b", re.IGNORECASE), "media_play_pause", {}),
-        (re.compile(r"^\b(stop|halt playback)\b", re.IGNORECASE), "media_stop", {}),
-        (re.compile(r"^\b(mute|unmute|toggle audio mute)\b", re.IGNORECASE), "audio_toggle_mute", {}),
-        (re.compile(r"^\bvolume\s+up\b", re.IGNORECASE), "audio_volume_up", {"step": 5}),
-        (re.compile(r"^\bvolume\s+down\b", re.IGNORECASE), "audio_volume_down", {"step": 5}),
+        (re.compile(r"^\b(play|pause|resume|toggle playback|play music|pause music)\b", re.IGNORECASE), "media_play_pause", {}),
+        (re.compile(r"^\b(stop|halt playback|stop music)\b", re.IGNORECASE), "media_stop", {}),
+        (re.compile(r"^\b(mute|unmute|toggle audio mute|mute volume|mute audio)\b", re.IGNORECASE), "audio_toggle_mute", {}),
+        (re.compile(r"^\b(volume\s+up|increase\s+volume|raise\s+volume|turn\s+up\s+volume|louder)\b", re.IGNORECASE), "audio_volume_up", {"step": 5}),
+        (re.compile(r"^\b(volume\s+down|decrease\s+volume|lower\s+volume|turn\s+down\s+volume|quieter)\b", re.IGNORECASE), "audio_volume_down", {"step": 5}),
 
         # Video Editing Actions (e.g. DaVinci Resolve)
         (re.compile(r"^\b(cut|blade|split clip|make cut)\b", re.IGNORECASE), "davinci_blade_cut", {}),

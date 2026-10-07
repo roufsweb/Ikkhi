@@ -57,7 +57,18 @@ class ScreenIndexer:
                 if box[2] <= box[0] or box[3] <= box[1]:
                     box = (active_monitor.left, active_monitor.top, active_monitor.right, active_monitor.bottom)
 
-            raw_image = ImageGrab.grab(bbox=box, all_screens=False)
+            try:
+                raw_image = ImageGrab.grab(bbox=box, all_screens=True)
+            except Exception:
+                try:
+                    full_image = ImageGrab.grab(all_screens=True)
+                    if box and box[2] > box[0] and box[3] > box[1]:
+                        raw_image = full_image.crop(box)
+                    else:
+                        raw_image = full_image
+                except Exception as grab_err:
+                    raise ScreenCaptureError(f"Failed to capture screen: {grab_err}") from grab_err
+
             orig_w, orig_h = raw_image.size
             if box is None:
                 box = (0, 0, orig_w, orig_h)

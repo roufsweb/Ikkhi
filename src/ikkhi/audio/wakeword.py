@@ -82,8 +82,16 @@ class WakeWordListener:
             return
 
         self._running = True
+        dev_idx = getattr(self.settings, "input_device", None)
+        if dev_idx is not None and isinstance(dev_idx, str):
+            try:
+                dev_idx = int(dev_idx)
+            except ValueError:
+                pass
+
         # Block size of 1280 samples = 80ms at 16kHz
         self._stream = sd.InputStream(
+            device=dev_idx,
             samplerate=self.sample_rate,
             channels=1,
             dtype="int16",

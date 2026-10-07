@@ -198,6 +198,31 @@ class DashboardWindow(QMainWindow):
         layout.setContentsMargins(18, 18, 18, 18)
         layout.setSpacing(14)
 
+        # Microphone Device Selector
+        row_mic = QHBoxLayout()
+        lbl_mic = QLabel("Microphone Device:", widget)
+        lbl_mic.setFixedWidth(160)
+        self.combo_mic = QComboBox(widget)
+        self.combo_mic.addItem("Default System Input", None)
+        try:
+            import sounddevice as sd
+            for idx, dev in enumerate(sd.query_devices()):
+                if dev['max_input_channels'] > 0:
+                    self.combo_mic.addItem(f"[{idx}] {dev['name']}", idx)
+        except Exception:
+            pass
+
+        current_dev = getattr(self.config.audio, "input_device", None)
+        if current_dev is not None:
+            for i in range(self.combo_mic.count()):
+                if self.combo_mic.itemData(i) == current_dev:
+                    self.combo_mic.setCurrentIndex(i)
+                    break
+
+        row_mic.addWidget(lbl_mic)
+        row_mic.addWidget(self.combo_mic)
+        layout.addLayout(row_mic)
+
         # Hotkey
         row1 = QHBoxLayout()
         lbl1 = QLabel("Push-to-Talk Hotkey:", widget)
@@ -298,6 +323,7 @@ class DashboardWindow(QMainWindow):
 
     def _save_settings(self) -> None:
         """Persist modified settings back to configuration."""
+        self.config.audio.input_device = self.combo_mic.currentData()
         self.config.audio.push_to_talk_key = self.input_hotkey.text().strip().lower()
         self.config.audio.wake_word = self.input_wakeword.text().strip().lower()
         self.config.audio.whisper_model = self.combo_whisper.currentText()
