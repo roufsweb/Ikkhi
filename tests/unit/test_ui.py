@@ -127,3 +127,24 @@ def test_dashboard_metrics_and_logging(qapp):
     assert dashboard.input_project_id.text() == config.ai_tier.gemini_project_id
 
     dashboard.close()
+
+
+def test_cursor_target_beacon(qapp):
+    """Verify HeyClicky-style visual target beacon instantiation and geometry."""
+    from ikkhi.ui.beacon import CursorTargetBeacon, show_visual_beacon
+    beacon = CursorTargetBeacon(size=80)
+    assert beacon.width() == 80
+    assert beacon.height() == 80
+    assert beacon.windowFlags() & Qt.WindowType.FramelessWindowHint
+
+    beacon.trigger_at(400, 300, duration_seconds=0.1)
+    assert beacon.isVisible()
+    # Centered at (400 - 40, 300 - 40) = (360, 260)
+    assert beacon.x() == 360
+    assert beacon.y() == 260
+    beacon.close()
+
+    # Convenience helper test
+    live_beacon = show_visual_beacon(500, 500, duration=0.1)
+    assert live_beacon is not None
+    live_beacon.close()

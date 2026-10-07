@@ -19,7 +19,11 @@ e:/rouf/software-project/Ikkhi/
 │       │   └── SKILL.md
 │       ├── ikkhi-ui/                       # Autonomous UI engineering & design token governance
 │       │   └── SKILL.md
-│       └── ikkhi-map/                      # Master project map maintenance & connection schema
+│       ├── ikkhi-map/                      # Master project map maintenance & connection schema
+│       │   └── SKILL.md
+│       ├── ikkhi-product/                  # Product management, roadmap prioritization & token KPIs
+│       │   └── SKILL.md
+│       └── ikkhi-files/                    # Workspace file taxonomy, directory hygiene & anti-clutter
 │           └── SKILL.md
 │
 ├── docs/                                   # Architectural research, plans & comparative studies
@@ -85,6 +89,7 @@ e:/rouf/software-project/Ikkhi/
 │           ├── tray.py                     # Windows Shell notification tray icon & context menu
 │           ├── dashboard.py                # Token analytics, metrics cards & settings panel
 │           ├── controller.py               # Asynchronous QThread audio inference worker & RMS timer
+│           ├── beacon.py                   # HeyClicky-style visual target beacon & cursor ripple indicator
 │           └── app.py                      # Master Qt application coordinator & window manager
 │
 ├── tests/                                  # Comprehensive automated test suite (46 tests)
@@ -172,6 +177,20 @@ e:/rouf/software-project/Ikkhi/
 - **Inbound Connections:** AI agents completing features, modifying $\ge 3$ files, or restructuring directories.
 - **Outbound Connections:** Governs [`PROJECT_MAP.md`](file:///e:/rouf/software-project/Ikkhi/PROJECT_MAP.md), [`CONTEXT.md`](file:///e:/rouf/software-project/Ikkhi/CONTEXT.md).
 - **Key Interfaces:** Mandatory dossier templates, verification checklists, update triggers.
+- **Resource Profile:** Meta-documentation (0 runtime tokens).
+
+#### 📄 [`.agents/skills/ikkhi-product/SKILL.md`](file:///e:/rouf/software-project/Ikkhi/.agents/skills/ikkhi-product/SKILL.md)
+- **Job / Core Duty:** Product management governance, user value economics, feature lifecycle, release gates, and competitive benchmarking vs HeyClicky/OpenClaw.
+- **Inbound Connections:** Product managers, AI agents scoping new features, release sign-off routines.
+- **Outbound Connections:** Governs roadmap priorities, token KPIs, and release quality gates across all features.
+- **Key Interfaces:** Zero-Token First economic rule, RICE-R prioritization matrix, 6-point release gate checklist.
+- **Resource Profile:** Meta-documentation (0 runtime tokens).
+
+#### 📄 [`.agents/skills/ikkhi-files/SKILL.md`](file:///e:/rouf/software-project/Ikkhi/.agents/skills/ikkhi-files/SKILL.md)
+- **Job / Core Duty:** File system governance, directory taxonomy, artifact archiving, clutter prevention, and naming conventions for the Ikkhi codebase.
+- **Inbound Connections:** AI agents adding files, refactoring directories, or performing pre-commit cleanup.
+- **Outbound Connections:** Governs directory boundaries (`src/`, `tests/`, `scripts/`, `docs/`, `storage/`), path resolution invariants (`paths.py`).
+- **Key Interfaces:** Canonical directory taxonomy, casing standards, anti-clutter routine.
 - **Resource Profile:** Meta-documentation (0 runtime tokens).
 
 ---
@@ -411,6 +430,13 @@ e:/rouf/software-project/Ikkhi/
 - **Outbound Connections:** `PyQt6.QtCore.QThread`, `src/ikkhi/audio/capture.py`, `src/ikkhi/audio/stt.py`, `src/ikkhi/audio/hotkey.py`, `src/ikkhi/audio/wakeword.py`, `src/ikkhi/core/orchestrator.py`.
 - **Key Interfaces:** `GUIController`, `AudioInferenceWorker`, `state_changed`, `rms_updated`, `command_logged`, `start_listeners()`, `stop_listeners()`.
 - **Resource Profile:** Non-blocking async worker; guarantees uncompromised 60 FPS GUI responsiveness.
+
+#### 📄 [`src/ikkhi/ui/beacon.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/ui/beacon.py)
+- **Job / Core Duty:** HeyClicky-style visual target beacon and cursor highlight ripple overlay; renders an animated neon cyan/violet dual-ring radar ripple directly at target coordinates.
+- **Inbound Connections:** `src/ikkhi/vision/pointer.py` (`CursorPointer.point_to`), `tests/unit/test_ui.py`.
+- **Outbound Connections:** `PyQt6.QtWidgets`, `PyQt6.QtGui`, `PyQt6.QtCore`.
+- **Key Interfaces:** `CursorTargetBeacon`, `show_visual_beacon(screen_x: int, screen_y: int, duration: float = 1.5)`.
+- **Resource Profile:** Non-activating frameless overlay with 40 FPS timer decay (<1% GPU).
 
 #### 📄 [`src/ikkhi/ui/app.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/ui/app.py)
 - **Job / Core Duty:** Master Qt Application Coordinator; manages application lifecycle, positions the HUD overlay at the top-center of the primary monitor, and wires type-safe signals between controller, overlay, dashboard, and tray.

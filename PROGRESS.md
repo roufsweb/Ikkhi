@@ -167,3 +167,10 @@
 - [x] Updated Global Mermaid Dependency Graph with accurate, verified module names
 - [x] Documented end-to-end operational pipelines: Spoken Execution (Tier 0), Multimodal Screen Grounding (Tier 1), and Experiential Mistake Learning
 - [x] Linked `ikkhi-map` governance protocol across [`AGENTS.md`](file:///e:/rouf/software-project/Ikkhi/AGENTS.md) and [`CONTEXT.md`](file:///e:/rouf/software-project/Ikkhi/CONTEXT.md)
+
+### Phase 14: HeyClicky Visual Target Beacon & Skill Inventory Expansion 🟢
+- [x] Implemented HeyClicky-style on-screen visual ripple target beacon ([`src/ikkhi/ui/beacon.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/ui/beacon.py)) with animated neon cyan/violet dual-ring radar ripple
+- [x] Integrated visual beacon directly into [`CursorPointer.point_to`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/vision/pointer.py#L40-L55) to visually ground cursor coordinates
+- [x] Authored Product Management AI Skill Protocol ([`.agents/skills/ikkhi-product/SKILL.md`](file:///e:/rouf/software-project/Ikkhi/.agents/skills/ikkhi-product/SKILL.md)) for roadmap prioritization, token economy KPIs, and release gates
+- [x] Authored File Management & Organizing AI Skill Protocol ([`.agents/skills/ikkhi-files/SKILL.md`](file:///e:/rouf/software-project/Ikkhi/.agents/skills/ikkhi-files/SKILL.md)) for workspace directory taxonomy, clutter elimination, and naming standards
+- [x] Expanded test suite to **47/47 automated tests passing (100% pass rate)** in `tests/unit/test_ui.py`

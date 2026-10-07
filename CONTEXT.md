@@ -62,7 +62,7 @@
 - [`src/ikkhi/audio/`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/audio/): `capture.py` (RMS buffer), `hotkey.py` (pynput), `stt.py` (Whisper CUDA), `tts.py` (local SAPI).
 - [`src/ikkhi/automation/`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/automation/): `reader.py` (screen TTS reader), `experience.py` (mistake learner), `creative/` (catalog), `universal.py`, `inspector.py`, `profiles.py`, `registry.py`, `windows.py`, `apps/davinci.py`.
 - [`src/ikkhi/vision/`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/vision/): `monitors.py` (multi-display normalizer), `indexer.py` (crop/downsample), `pointer.py` (bezier cursor).
-- [`src/ikkhi/ui/`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/ui/): `theme.py` (obsidian QSS), `overlay.py` (HUD + waveform), `tray.py` (vector tray), `dashboard.py` (token meter), `app.py`.
+- [`src/ikkhi/ui/`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/ui/): `theme.py` (obsidian QSS), `overlay.py` (HUD + waveform), `beacon.py` (HeyClicky ripple), `tray.py`, `dashboard.py`, `app.py`.
 - [`dist/Ikkhi.exe`](file:///e:/rouf/software-project/Ikkhi/dist/Ikkhi.exe): Standalone single-file binary.
 
 ---

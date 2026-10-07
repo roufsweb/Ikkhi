@@ -46,6 +46,13 @@ class CursorPointer:
             pyautogui.moveTo(current_x, current_y, _pause=False)
             time.sleep(sleep_interval)
 
+        # Trigger HeyClicky-style on-screen visual ripple beacon
+        try:
+            from ikkhi.ui.beacon import show_visual_beacon
+            show_visual_beacon(target_x, target_y, duration=self.settings.highlight_duration_seconds)
+        except Exception:
+            pass
+
         # Attention highlight: subtle circular gesture
         self._highlight_target(target_x, target_y)
 

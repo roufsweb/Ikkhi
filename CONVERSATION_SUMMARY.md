@@ -140,3 +140,11 @@
   - In `src/ikkhi/audio/stt.py`, `info.transcription_options` is a structured `dataclass` rather than a `dict`. Accessing `.get()` raised an `AttributeError` which was caught and surfaced to the UI HUD as an inference failure.
   - Resolved by directly reading `info.language_probability` and ensuring the audio array is formatted as a 1D contiguous `float32` array.
   - Verified with live CUDA execution and all 46 unit/integration tests passing.
+- **HeyClicky-Style Visual Target Beacon & Skill Inventory Expansion (Phase 14):**
+  - Analyzed and documented voice sequencing, wake-word detection architecture, and faster-whisper CUDA STT pipeline.
+  - Implemented HeyClicky-style on-screen visual ripple target beacon in `src/ikkhi/ui/beacon.py` (`CursorTargetBeacon`) featuring animated neon cyan/violet dual-ring radar ripple and reticle crosshair.
+  - Wired beacon directly into `src/ikkhi/vision/pointer.py` (`CursorPointer.point_to`).
+  - Authored Product Management AI Skill protocol in `.agents/skills/ikkhi-product/SKILL.md` (roadmap prioritization, token economy KPIs, RICE-R scoring, 6-point release gates).
+  - Authored File Management & Organizing AI Skill protocol in `.agents/skills/ikkhi-files/SKILL.md` (directory taxonomy, anti-clutter routine, path resolution invariants).
+  - Expanded automated test suite to **47/47 tests passing (100% pass rate)** including `test_cursor_target_beacon`.
+  - Synchronized Master Project Map (`PROJECT_MAP.md`), `PROGRESS.md`, and `CONTEXT.md`.
