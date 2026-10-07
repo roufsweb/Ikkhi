@@ -5,7 +5,7 @@
 [![OS: Windows](https://img.shields.io/badge/platform-Windows%2011-blue.svg)](https://www.microsoft.com/windows)
 [![Code Style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-**Ikkhi** (*ইক্ষি*, Bengali for *vision/sight*) is an enterprise-grade, resource-efficient Windows desktop assistant engineered for hands-free workflow automation. Built upon a hybrid execution model, Ikkhi empowers creators and developers to operate demanding creative suites (such as DaVinci Resolve) and development environments without manual keystrokes or mouse navigation.
+**Ikkhi** (*ইক্ষি*, Bengali for *vision/sight*) is a fast, resource-efficient Windows desktop assistant for hands-free workflow automation. Built upon a hybrid execution model, Ikkhi lets you operate demanding creative suites (such as DaVinci Resolve) and development environments without manual keystrokes or mouse navigation.
 
 ---
 

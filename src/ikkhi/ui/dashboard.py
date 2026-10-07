@@ -93,10 +93,10 @@ class DashboardWindow(QMainWindow):
         header_text = QVBoxLayout()
         header_text.setSpacing(2)
 
-        title = QLabel("IKKHI DESKTOP CONTROL PANEL", self)
+        title = QLabel("Ikkhi Control Panel", self)
         title.setStyleSheet("color: #ffffff; font-size: 18px; font-weight: 800; letter-spacing: 0.5px;")
 
-        subtitle = QLabel("ইক্ষি • Local Intelligence & Resource-Conscious Automation", self)
+        subtitle = QLabel("Local voice automation and desktop macros", self)
         subtitle.setStyleSheet("color: #00e5ff; font-size: 12px; font-weight: 600;")
 
         header_text.addWidget(title)
@@ -105,7 +105,7 @@ class DashboardWindow(QMainWindow):
         header_layout.addStretch()
 
         # Badge
-        badge = QLabel("RTX 3070 CUDA • ONLINE", self)
+        badge = QLabel("CUDA Ready", self)
         badge.setStyleSheet(
             "background-color: rgba(16, 185, 129, 0.15); color: #34d399; "
             "border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; "
@@ -114,11 +114,11 @@ class DashboardWindow(QMainWindow):
         header_layout.addWidget(badge)
         root_layout.addLayout(header_layout)
 
-        # Tabs container
+        # Tabs container (clean, emoji-free)
         self.tabs = QTabWidget(self)
-        self.tabs.addTab(self._build_analytics_tab(), "⚡ Token Analytics")
-        self.tabs.addTab(self._build_profiles_tab(), "📁 Adaptive Profiles")
-        self.tabs.addTab(self._build_settings_tab(), "⚙️ Hardware & Settings")
+        self.tabs.addTab(self._build_analytics_tab(), "Activity")
+        self.tabs.addTab(self._build_profiles_tab(), "App Profiles")
+        self.tabs.addTab(self._build_settings_tab(), "Settings")
         root_layout.addWidget(self.tabs)
 
     def _build_analytics_tab(self) -> QWidget:
@@ -131,10 +131,10 @@ class DashboardWindow(QMainWindow):
         deck = QHBoxLayout()
         deck.setSpacing(12)
 
-        self.card_fastpath = MetricCard("Local Fast-Path", "0", "0-token queries (<2ms)")
-        self.card_cloud = MetricCard("Cloud Multimodal", "0", "Gemini 2.0 fallback")
+        self.card_fastpath = MetricCard("Local Actions", "0", "Local macros and hotkeys")
+        self.card_cloud = MetricCard("Cloud Queries", "0", "Vision fallback queries")
         self.card_tokens = MetricCard("Tokens Saved", "0", "Estimated conserved")
-        self.card_savings = MetricCard("Savings ($)", "$0.00", "Cloud API offset")
+        self.card_savings = MetricCard("Est. Savings", "$0.00", "Estimated API offset")
 
         deck.addWidget(self.card_fastpath)
         deck.addWidget(self.card_cloud)

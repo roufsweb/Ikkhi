@@ -169,8 +169,8 @@ class FloatingCompanionOverlay(QWidget):
             "font-weight: 600;"
         )
 
-        # Tier / Cost feedback badge
-        self.tier_badge = QLabel("⚡ 0ms • $0.00", self.container)
+        # Tier feedback badge (clean, minimal indicator)
+        self.tier_badge = QLabel("local", self.container)
         self.tier_badge.setObjectName("tierBadge")
         self.tier_badge.setStyleSheet(
             "background-color: rgba(16, 185, 129, 0.14);"
@@ -229,14 +229,14 @@ class FloatingCompanionOverlay(QWidget):
     def set_tier_feedback(self, tier_label: str) -> None:
         """Flash execution tier feedback badge."""
         if "Tier 0" in tier_label or "Local" in tier_label:
-            self.tier_badge.setText("⚡ 0ms • $0.00")
+            self.tier_badge.setText("local")
             self.tier_badge.setStyleSheet(
                 "background-color: rgba(16, 185, 129, 0.14); color: #34d399; "
                 "border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 6px; "
                 "padding: 2px 7px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;"
             )
         else:
-            self.tier_badge.setText("☁️ Gemini Flash")
+            self.tier_badge.setText("cloud")
             self.tier_badge.setStyleSheet(
                 "background-color: rgba(168, 85, 247, 0.16); color: #c084fc; "
                 "border: 1px solid rgba(168, 85, 247, 0.35); border-radius: 6px; "
