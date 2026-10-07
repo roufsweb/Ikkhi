@@ -49,7 +49,7 @@ class IkkhiOrchestrator:
                 return f"[Universal Action Executed] {msg}"
 
         # Tier 1: Visual Screen Grounding & Adaptive Learning
-        if route.target == RouteTarget.VISUAL_QUERY or route.is_cloud_request:
+        if route.target == RouteTarget.VISUAL_QUERY:
             logger.info("Routing visual query to Gemini with active window snapshot...")
             try:
                 screen = self.screen_indexer.capture_active_window()
@@ -79,6 +79,17 @@ class IkkhiOrchestrator:
             except Exception as exc:
                 logger.error("Visual processing failed: %s", exc)
                 return f"[Error] Screen indexing failed: {exc}"
+
+        # Tier 1.5: Conversational Dialogue Fallback (No screenshot required)
+        if route.target == RouteTarget.CONVERSATIONAL_FALLBACK or route.is_cloud_request:
+            logger.info("Routing conversational query to Gemini...")
+            try:
+                answer = self.gemini_client.query_conversational(route.raw_query)
+                self.speech_engine.speak(answer)
+                return answer
+            except Exception as exc:
+                logger.error("Conversational query failed: %s", exc)
+                return f"[Error] Conversational assistant failed: {exc}"
 
         return "No action taken."
 

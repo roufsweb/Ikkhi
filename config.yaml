@@ -31,7 +31,7 @@ audio:
 ai_tier:
   # Google AI Studio settings (strictly on-demand)
   enable_cloud_fallback: true
-  model_name: "gemini-3.8-flash"
+  model_name: "gemini-3.5-flash"
   auto_select_model: true # Query API first to verify model availability before commanding
   max_output_tokens: 350
   temperature: 0.1

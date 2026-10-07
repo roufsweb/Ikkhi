@@ -107,8 +107,8 @@ class ReasonedModelOrchestrator:
         if has_image:
             # Case 1: Visual / UI Grounding Task
             priority = [
-                "gemini-3.8-flash",
                 "gemini-3.5-flash",
+                "gemini-3.8-flash",
                 "gemini-3.1-flash-lite",
                 "gemini-2.5-flash",
                 "gemini-flash-latest",
@@ -121,15 +121,15 @@ class ReasonedModelOrchestrator:
             priority = [
                 "gemini-2.5-pro",
                 "gemini-pro-latest",
-                "gemini-3.8-flash",
                 "gemini-3.5-flash",
+                "gemini-3.8-flash",
             ]
             task_desc = "Complex analytical and diagnostic reasoning (requires deep multi-step logic)."
         else:
             # Case 3: Fast conversational or utility query
             priority = [
-                "gemini-3.8-flash",
                 "gemini-3.5-flash",
+                "gemini-3.8-flash",
                 "gemini-3.1-flash-lite",
                 "gemini-2.5-flash",
                 "gemini-flash-latest",

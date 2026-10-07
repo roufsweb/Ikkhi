@@ -4,6 +4,7 @@ Integrates ReasonedModelOrchestrator for dynamic model discovery, task-aware rea
 and resilient multi-model fallback execution.
 """
 
+import re
 import json
 import logging
 from dataclasses import dataclass
@@ -26,7 +27,7 @@ class VisualQueryResult:
 
 
 class GeminiVisualClient:
-    """Client for on-demand visual queries, strictly budgeted for token conservation."""
+    """Client for on-demand visual queries and conversational fallback."""
 
     SYSTEM_INSTRUCTION = (
         "You are Ikkhi's visual assistant. The user provides an image crop of an application window "
@@ -39,6 +40,12 @@ class GeminiVisualClient:
         '  "explanation": "Concise 1-sentence answer to the user"\n'
         "}\n"
         "If no specific element is targeted, set target_found to false and leave coordinates null."
+    )
+
+    CONVERSATIONAL_INSTRUCTION = (
+        "You are Ikkhi, a fast, lightweight, voice-controlled Windows desktop assistant. "
+        "Answer the user conversationally, concisely (1-2 sentences maximum), directly, and naturally. "
+        "Do not use markdown formatting, asterisks, bullet points, or code blocks, as your output is read aloud via speech synthesis."
     )
 
     def __init__(self, settings: AITierSettings) -> None:
@@ -66,6 +73,29 @@ class GeminiVisualClient:
         )
         return chosen
 
+    def query_conversational(self, user_prompt: str) -> str:
+        """Processes conversational and general user queries without screen capture."""
+        if not self.orchestrator.client:
+            return "Google AI Studio API key not configured in .env."
+
+        try:
+            response, used_model, reasoning = self.orchestrator.generate_with_fallback(
+                contents=[user_prompt],
+                system_instruction=self.CONVERSATIONAL_INSTRUCTION,
+                temperature=0.7,
+                max_output_tokens=150,
+                user_prompt=user_prompt,
+                has_image=False,
+                preferred_model=self.settings.model_name
+            )
+            raw_text = response.text.strip() if hasattr(response, "text") and response.text else ""
+            # Clean markdown formatting so TTS sounds natural
+            cleaned = re.sub(r"[*#_`]", "", raw_text).strip()
+            return cleaned if cleaned else "I am here and listening."
+        except Exception as exc:
+            logger.error("Conversational query error: %s", exc)
+            return "I am having trouble answering right now."
+
     def query_visual_target(self, user_prompt: str, screen: IndexedScreen) -> VisualQueryResult:
         """Sends compressed screen crop to Gemini with strict token limits, task reasoning, and fallback."""
         if not self.orchestrator.client:
@@ -92,22 +122,36 @@ class GeminiVisualClient:
                 preferred_model=self.settings.model_name
             )
 
-            result_json = json.loads(response.text)
+            raw_text = response.text.strip() if hasattr(response, "text") and response.text else "{}"
+            # Extract JSON substring if surrounded by fences or text
+            json_match = re.search(r"\{.*\}", raw_text, re.DOTALL)
+            clean_json = json_match.group(0) if json_match else raw_text
+
+            try:
+                result_json = json.loads(clean_json)
+            except Exception:
+                result_json = {"target_found": False, "explanation": raw_text.strip()}
+
             target_found = result_json.get("target_found", False)
             coords = None
             if target_found and "normalized_x" in result_json and "normalized_y" in result_json:
                 coords = (float(result_json["normalized_x"]), float(result_json["normalized_y"]))
 
+            explanation = result_json.get("explanation", "").strip()
+            if not explanation:
+                explanation = "Element located on screen." if target_found else "I could not locate that element on screen."
+
             return VisualQueryResult(
                 target_found=target_found,
                 coordinates=coords,
-                response_text=result_json.get("explanation", ""),
+                response_text=explanation,
                 used_model=used_model,
                 reasoning=reasoning
             )
         except Exception as exc:
+            logger.error("Visual processing failed: %s", exc)
             return VisualQueryResult(
                 target_found=False,
                 coordinates=None,
-                response_text=f"Visual query failed: {exc}"
+                response_text="I could not find that control on your screen."
             )
