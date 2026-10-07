@@ -157,4 +157,9 @@
   - **Interactive Diagnostic Suite (`scripts/diagnose_interactions.py`):** Created a live terminal tool analyzing input audio devices (detecting silent VB-Audio Virtual Cable vs physical Realtek/Bluetooth mics), verifying neural TTS, listing 62 available Gemini models, and providing an interactive live input correlation table.
   - **Automated Test Expansion:** Expanded test suite from 47 to **53 of 53 tests passing (100% pass rate)**.
   - **Documentation Sync:** Updated `CONTEXT.md`, `PROGRESS.md`, `PROJECT_MAP.md`, and `CONVERSATION_SUMMARY.md`.
-
+- **Pre-Edit Impact & Dependency Analysis Protocol, Continuous Code Map Governance & Voice Tree Analytics (Phase 18):**
+  - **Pre-Edit "Why & Downstream Effect" Mandate:** Enshrined Directives 9 and 10 in [`AGENTS.md`](file:///e:/rouf/software-project/Ikkhi/AGENTS.md) and Section 5-6 in [`.agents/skills/ikkhi-map/SKILL.md`](file:///e:/rouf/software-project/Ikkhi/.agents/skills/ikkhi-map/SKILL.md). Every AI agent MUST inspect [`PROJECT_MAP.md`](file:///e:/rouf/software-project/Ikkhi/PROJECT_MAP.md), state WHY the file/mode is being modified, and analyze its downstream effect on inbound callers and outbound dependencies before modifying any code.
+  - **Agent Speed-Up Protocol via Code Map Indexing:** Provided guidelines for sub-30-second AI agent onboarding and instant file navigation using bidirectional connectivity matrices in [`PROJECT_MAP.md`](file:///e:/rouf/software-project/Ikkhi/PROJECT_MAP.md).
+  - **Comprehensive Codebase Indexing:** Completely re-indexed [`PROJECT_MAP.md`](file:///e:/rouf/software-project/Ikkhi/PROJECT_MAP.md) inventory, dossiers, and Mermaid graph with all newly added files (`router_model.py`, `test_gemini_models.py`, `test_logger.py`, `list_devices.py`, `dist/Ikkhi.exe`, `launch_ikkhi.bat`, `launch_tester.bat`).
+  - **Full System Verification:** Confirmed that all 54 unit and integration tests pass with 100% pass rate (`pytest`).
+  - **Voice Tree Architectural Analytics:** Documented the complete acoustic ingestion, wake-word spotter, faster-whisper CUDA STT, intent classification, and Edge Neural TTS tree.

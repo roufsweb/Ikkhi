@@ -9,20 +9,21 @@
 
 | Metric | Measurement | Status |
 | :--- | :--- | :--- |
-| **Total Core Milestones** | 13 Major Phases | **13 Completed (100%)** |
-| **Architectural Modules Deployed** | 29 Core Components | **29 Deployed (100%)** |
-| **Automated Test Coverage** | 53 Automated Tests | **53/53 Passing (100%)** |
+| **Total Core Milestones** | 17 Major Phases | **17 Completed (100%)** |
+| **Architectural Modules Deployed** | 30 Core Components | **30 Deployed (100%)** |
+| **Automated Test Coverage** | 54 Automated Tests | **54/54 Passing (100%)** |
 | **Defensive Security Hardening** | Injection & Traversal Protected | **Hardened (A+ Rating)** |
 | **Token Cost Reduction vs. HeyClicky**| Baseline 100% Cloud $\rightarrow$ <5% Cloud | **>95% Token Savings** |
 | **Multi-Display Topologies Supported** | Single + Multi-Monitor Virtual Grids | **100% Supported** |
 | **GUI Desktop Companion** | Floating HUD + System Tray + Dashboard | **Deployed & Verified** |
-| **Single Executable Deployment** | Self-Contained `dist/Ikkhi.exe` | **Deployed & Verified** |
+| **Single Executable Deployment** | Self-Contained `dist/Ikkhi.exe` (181.51 MB) | **Compiled & Verified** |
 | **Compact Agent Context Snapshot** | High-Density `CONTEXT.md` (<100 lines) | **Deployed & Verified** |
 | **Creative Experiential Learning** | Bayesian Mistake & Strategy Learner | **Deployed & Verified** |
 | **Screen Reading Subsystem** | Zero-Token Native Screen TTS | **Deployed & Verified** |
 | **Persistent Logging & Correlation** | Rotating `storage/ikkhi.log` + Key/RMS/Focus Tracker | **Deployed & Verified** |
 | **Natural Neural Voice (TTS)** | Google Assistant Style Neural TTS + SAPI Fallback | **Deployed & Verified** |
 | **Dynamic Model Verification** | Pre-command Gemini Model Probing & Selection | **Deployed & Verified** |
+| **Pre-Edit Impact Governance** | Mandatory Why & Effect Dependency Protocol | **Enshrined in Rules & Map** |
 | **Overall Project Completion** | Standalone Single Binary & Creative Mastery | **100% Completed** |
 | **User-Testing Readiness** | Diagnostic Monitor & Executable Ready | **Ready for Live Testing** |
 
@@ -229,3 +230,18 @@ To ensure zero guesswork for future AI agents and developers, every feature and 
 - [x] Engineered Organic Center-Weighted Harmonic Formant Bell-Curve Audio Waveform visualizer in [`AudioWaveformVisualizer`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/ui/overlay.py)
 - [x] Connected type-safe controller signals (`context_changed`, `tier_dispatched`) in [`src/ikkhi/ui/app.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/ui/app.py)
 - [x] Verified full regression test suite passing at **47/47 tests (100% pass rate)**
+
+### Phase 16: Voice Enhancement, Dynamic AI Probing & Standalone Binary
+- [x] Implemented Microsoft Edge Neural TTS (`en-US-AvaNeural`) streaming directly into memory with PyAV decoding to float32 PCM and zero-disk `sounddevice` playback; offline SAPI 5 fallback
+- [x] Implemented `resolve_optimal_input_device()` auto-resolving physical microphones (Realtek HD Audio Mic) and bypassing silent virtual cables
+- [x] Implemented dynamic Google AI Studio model probing (46 models) and reasoned task allocation (`gemini-2.5-flash` for vision, `gemini-2.5-pro` for reasoning) with automated fallback
+- [x] Implemented rotating persistent execution and input correlation logging in [`storage/ikkhi.log`](file:///e:/rouf/software-project/Ikkhi/storage/ikkhi.log) tracking user keys, window changes, audio RMS, Whisper STT, and action dispatch
+- [x] Compiled and verified standalone single-file binary [`dist/Ikkhi.exe`](file:///e:/rouf/software-project/Ikkhi/dist/Ikkhi.exe) (181.51 MB)
+- [x] Expanded automated test suite to **54/54 tests passing (100% pass rate)**
+
+### Phase 17: Pre-Edit Impact & Dependency Governance Protocol
+- [x] Added Directive 9 ("Mandatory Pre-Edit Impact & Dependency Analysis Invariant") and Directive 10 ("Continuous Code Map Synchronization") to [`AGENTS.md`](file:///e:/rouf/software-project/Ikkhi/AGENTS.md)
+- [x] Enshrined the "Why & Downstream Effect" procedure and Agent Speed-Up Protocol in [`.agents/skills/ikkhi-map/SKILL.md`](file:///e:/rouf/software-project/Ikkhi/.agents/skills/ikkhi-map/SKILL.md)
+- [x] Completely re-indexed [`PROJECT_MAP.md`](file:///e:/rouf/software-project/Ikkhi/PROJECT_MAP.md) inventory, dossiers, and Mermaid graph with all newly added files, tests, and scripts
+- [x] Validated full regression test suite at **54/54 tests passing (100% pass rate)**
+

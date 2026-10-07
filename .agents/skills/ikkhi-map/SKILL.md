@@ -77,11 +77,49 @@ Any AI agent working on Ikkhi MUST execute the Project Map synchronization routi
 
 ---
 
-## 5. Verification Checklist for `ikkhi-map`
+---
+
+## 5. Mandatory Pre-Edit Impact & Dependency Analysis ("Why & Effect" Protocol)
+
+Before altering, creating, or deleting ANY file or altering system operational modes, every AI agent MUST execute this procedure:
+
+### Step 1: Pre-Edit Topology Lookup
+- Open and inspect [`PROJECT_MAP.md`](file:///e:/rouf/software-project/Ikkhi/PROJECT_MAP.md).
+- Identify the target file's **Inbound Connections** (who calls/imports this file) and **Outbound Connections** (what this file calls/imports).
+
+### Step 2: Formulate the Pre-Edit Impact Statement
+Before modifying any line of code, the agent must formulate and verify:
+1. **WHY IS THIS BEING CHANGED?**
+   - What is the explicit user instruction, bug report, or architectural goal?
+   - What is the current behavior vs the required target behavior?
+2. **WHAT DOWNSTREAM EFFECT WILL IT HAVE?**
+   - Trace all **Inbound Callers** listed in the map. Will their method signatures, parameter names, or return values break?
+   - Trace all **Outbound Dependencies**. Are new external imports introduced that violate local-first or zero-token rules?
+   - Will this change affect PyQt6 GUI threads, audio buffer callbacks, or standalone PyInstaller compilation (`dist/Ikkhi.exe`)?
+
+### Step 3: Interface & Boundary Invariant Verification
+- Ensure that Tier 0 local fast-path routes remain $0.00 / zero-token.
+- Ensure no accidental external cloud calls or continuous background transcription is introduced.
+- Ensure all public functions retain type annotations matching PEP 561 / `py.typed`.
+
+---
+
+## 6. Agent Speed-Up Protocol via Code Map Indexing
+
+To maximize agent execution speed and eliminate token-wasteful blind searches:
+1. **Instant File Navigation:** Future AI agents MUST consult [`PROJECT_MAP.md`](file:///e:/rouf/software-project/Ikkhi/PROJECT_MAP.md) first to pinpoint the exact file responsible for a feature instead of scanning or grepping across hundreds of files.
+2. **Precise Scope Isolation:** By reading the Inbound/Outbound connection trees, agents can immediately limit their edits to only the relevant files, avoiding accidental regressions in distant modules.
+3. **Continuous Map Freshness:** Every agent that completes a feature or refactoring MUST update `PROJECT_MAP.md` immediately. A stale map slows down subsequent agents; an up-to-date map guarantees sub-30-second context onboarding.
+
+---
+
+## 7. Verification Checklist for `ikkhi-map`
 
 Before closing any session or task that touches project files, verify:
+- [ ] Was the "Why & Downstream Effect" analyzed prior to editing?
 - [ ] Are all new or modified files cataloged in [`PROJECT_MAP.md`](file:///e:/rouf/software-project/Ikkhi/PROJECT_MAP.md)?
 - [ ] Are Inbound and Outbound connections verified against actual `import` statements?
 - [ ] Does the Mermaid architecture diagram accurately reflect active modules (no legacy filenames)?
 - [ ] Are all file links formatted with valid markdown links?
 - [ ] Is [`CONTEXT.md`](file:///e:/rouf/software-project/Ikkhi/CONTEXT.md) synchronized with any high-level structural shifts?
+

@@ -3,6 +3,8 @@
 > **Authoritative Codebase Specification:** This document is the canonical Master Map for **Ikkhi** (ইক্ষি). It maps the directory topology, module responsibilities, bidirectional connection pathways (inbound callers and outbound dependencies), interfaces, and resource budgets across the entire project.
 > 
 > Governed by the [`ikkhi-map`](file:///e:/rouf/software-project/Ikkhi/.agents/skills/ikkhi-map/SKILL.md) skill. Maintained continuously upon every code modification.
+>
+> **Mandatory Pre-Edit Impact & Speed-Up Invariant:** Before editing any file or changing operational modes, all AI agents MUST consult this map to identify inbound callers and outbound dependencies, state **WHY** the change is being made, and analyze its **DOWNSTREAM EFFECT**. Update this map immediately after every change to keep editing fast and eliminate guesswork.
 
 ---
 
@@ -25,6 +27,9 @@ e:/rouf/software-project/Ikkhi/
 │       │   └── SKILL.md
 │       └── ikkhi-files/                    # Workspace file taxonomy, directory hygiene & anti-clutter
 │           └── SKILL.md
+│
+├── dist/                                   # Standalone production distribution
+│   └── Ikkhi.exe                           # PyInstaller standalone desktop assistant binary (181.51 MB)
 │
 ├── docs/                                   # Architectural research, plans & comparative studies
 │   ├── CLICKY_ANALYSIS.md                  # Deconstruction of HeyClicky strengths & weaknesses
@@ -51,11 +56,11 @@ e:/rouf/software-project/Ikkhi/
 │       │
 │       ├── audio/                          # Acoustic capture, neural STT, TTS & wake-word
 │       │   ├── __init__.py
-│       │   ├── capture.py                  # Zero-copy 16kHz audio buffer capture (sounddevice)
+│       │   ├── capture.py                  # Zero-copy 16kHz audio buffer capture & physical mic resolver
 │       │   ├── hotkey.py                   # Global push-to-talk listener & user key tracker (pynput)
 │       │   ├── stt.py                      # Local faster-whisper CUDA GPU transcription engine
-│       │   ├── tts.py                      # Natural Edge Neural TTS (Google Assistant style) + SAPI
-│       │   └── wakeword.py                 # Low-overhead acoustic wake-word spotter (Hey Ikkhi / Siri / Google)
+│       │   ├── tts.py                      # Natural Edge Neural TTS (Google Assistant style) + SAPI fallback
+│       │   └── wakeword.py                 # Low-overhead acoustic wake-word spotter & dynamic calibrator
 │       │
 │       ├── ai/                             # Dynamic model discovery, reasoned selection & fallback
 │       │   ├── __init__.py
@@ -84,10 +89,6 @@ e:/rouf/software-project/Ikkhi/
 │       │       ├── __init__.py
 │       │       └── catalog.py              # Premiere, Blender, Photoshop, Figma, Ableton, etc.
 │       │
-│       ├── ai/                             # Multimodal cloud AI tier
-│       │   ├── __init__.py
-│       │   └── gemini.py                   # Token-conscious Google AI Studio visual client
-│       │
 │       └── ui/                             # Standalone desktop graphical user interface
 │           ├── __init__.py
 │           ├── theme.py                    # Obsidian dark-mode stylesheet & design tokens
@@ -98,7 +99,7 @@ e:/rouf/software-project/Ikkhi/
 │           ├── beacon.py                   # HeyClicky-style visual target beacon & cursor ripple indicator
 │           └── app.py                      # Master Qt application coordinator & window manager
 │
-├── tests/                                  # Comprehensive automated test suite (47 tests)
+├── tests/                                  # Comprehensive automated test suite (54 tests, 100% pass)
 │   ├── __init__.py
 │   ├── integration/                        # End-to-end integration tests
 │   │   ├── __init__.py
@@ -110,6 +111,8 @@ e:/rouf/software-project/Ikkhi/
 │       ├── test_context.py                 # Compact context snapshot boundedness & coverage
 │       ├── test_creative.py                # Universal creative app catalog & shortcut tests
 │       ├── test_experience.py              # Bayesian experiential memory & mistake learning tests
+│       ├── test_gemini_models.py           # Reasoned model selection & multi-model fallback tests
+│       ├── test_logger.py                  # Persistent rotating file logging & input tracker tests
 │       ├── test_monitors.py                # Multi-monitor enumeration & normalization tests
 │       ├── test_reader.py                  # Screen reading & text-to-speech routing tests
 │       ├── test_router.py                  # Intent classification & routing tests
@@ -120,6 +123,8 @@ e:/rouf/software-project/Ikkhi/
 │
 ├── scripts/                                # Maintenance, build & diagnostic routines
 │   ├── build_executable.py                 # PyInstaller single-file binary compilation script
+│   ├── diagnose_interactions.py            # Live user input correlation, audio & model diagnostic monitor
+│   ├── list_devices.py                     # Host sound device & audio API inspection utility
 │   ├── test_live_gui.py                    # Interactive visual GUI companion test launcher
 │   ├── test_live_voice.py                  # Interactive microphone & voice verification tool
 │   ├── test_live_wakeword.py               # Headless console wake-word & STT test script
@@ -127,6 +132,7 @@ e:/rouf/software-project/Ikkhi/
 │
 ├── storage/                                # Persistent application knowledge (Git-ignored)
 │   ├── profiles/                           # Per-application JSON control maps & learned macros
+│   ├── ikkhi.log                           # Rotating persistent execution & input correlation log
 │   └── live_test.log                       # Live session audio and inference telemetry log
 │
 ├── AGENTS.md                               # System directives, agent persona, and rules
@@ -143,6 +149,8 @@ e:/rouf/software-project/Ikkhi/
 ├── pyproject.toml                          # PEP 621 compliant package build & metadata
 ├── requirements.txt                        # Core Python runtime dependencies
 ├── Ikkhi.spec                              # PyInstaller standalone executable bundling specification
+├── launch_ikkhi.bat                        # Windows desktop launcher batch script
+├── launch_tester.bat                       # Wake-word diagnostic console launcher batch script
 ├── .env                                    # Local private credentials (Git-ignored)
 ├── .env.example                            # Public configuration template
 └── .gitignore                              # Comprehensive Python, OS & secret ignore rules
@@ -256,10 +264,10 @@ e:/rouf/software-project/Ikkhi/
 - **Submodules & Children:** `capture.py`, `hotkey.py`, `stt.py`, `tts.py`, `wakeword.py`.
 
 #### [`src/ikkhi/audio/capture.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/audio/capture.py)
-- **Job / Core Duty:** Asynchronous zero-copy 16kHz mono audio stream capture from workstation microphone into contiguous NumPy float32 arrays; computes real-time RMS amplitude.
-- **Inbound Connections:** `controller.py`, `__main__.py`, `test_live_voice.py`, `test_audio.py`.
+- **Job / Core Duty:** Asynchronous zero-copy 16kHz mono audio stream capture from workstation microphone into contiguous NumPy float32 arrays; includes `resolve_optimal_input_device()` to auto-bind to physical microphones (e.g., Realtek HD Audio Mic) while bypassing silent virtual audio cables.
+- **Inbound Connections:** `controller.py`, `__main__.py`, `wakeword.py`, `test_live_voice.py`, `test_audio.py`.
 - **Outbound Connections:** `sounddevice`, `numpy`, `queue`.
-- **Key Interfaces:** `AudioCaptureEngine`, `start_recording()`, `stop_recording() -> np.ndarray`, `get_live_rms() -> float`.
+- **Key Interfaces:** `AudioCaptureEngine`, `resolve_optimal_input_device()`, `start_recording()`, `stop_recording() -> np.ndarray`, `get_live_rms() -> float`.
 - **Resource Profile:** Memory buffer queue, <0.5% CPU during recording.
 
 #### [`src/ikkhi/audio/hotkey.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/audio/hotkey.py)
@@ -277,14 +285,14 @@ e:/rouf/software-project/Ikkhi/
 - **Resource Profile:** ~450MB VRAM on RTX 3070; sub-250ms inference latency; 0 API tokens ($0.00).
 
 #### [`src/ikkhi/audio/tts.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/audio/tts.py)
-- **Job / Core Duty:** Local, zero-token speech synthesis utilizing native Windows SAPI COM interfaces; delivers instant vocal confirmations without cloud synthesis delays or costs.
+- **Job / Core Duty:** Natural neural speech synthesis using Microsoft Edge Neural TTS (`en-US-AvaNeural`, Google Assistant style) with PyAV in-memory MP3 frame decoding to raw PCM `float32` and `sounddevice` playback; offline fallback to Windows SAPI 5 `SpVoice`.
 - **Inbound Connections:** `orchestrator.py`, `reader.py`, `controller.py`, `test_speech.py`.
-- **Outbound Connections:** `win32com.client` (`SAPI.SpVoice`).
+- **Outbound Connections:** `edge_tts`, `av` (PyAV), `sounddevice`, `win32com.client` (`SAPI.SpVoice`).
 - **Key Interfaces:** `LocalSpeechEngine`, `speak(text: str, wait: bool = False)`, `stop()`.
-- **Resource Profile:** Native OS COM object (<15ms latency, 0 tokens, $0.00).
+- **Resource Profile:** Ultra-smooth neural voice streamed directly in memory with 0 disk I/O latency; offline SAPI fallback (<15ms).
 
 #### [`src/ikkhi/audio/wakeword.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/audio/wakeword.py)
-- **Job / Core Duty:** Continuous background acoustic wake-word listener scanning for "Hey Ikkhi" and assistant phrases (Hey Siri, Hey Google, Jarvis) using adaptive noise calibration and physical mic auto-detection.
+- **Job / Core Duty:** Continuous background acoustic wake-word listener scanning for "Hey Ikkhi" and assistant phrases (Hey Siri, Hey Google, Jarvis, Computer) using dynamic noise floor calibration, physical mic resolution, and remainder intent slicing.
 - **Inbound Connections:** `controller.py`, `__main__.py`, `test_live_wakeword.py`.
 - **Outbound Connections:** `sounddevice`, `numpy`, `src/ikkhi/audio/stt.py`, `src/ikkhi/audio/capture.py`.
 - **Key Interfaces:** `WakeWordListener`, `start()`, `stop()`, `trigger_manual(phrase: str)`.
@@ -517,6 +525,8 @@ e:/rouf/software-project/Ikkhi/
 - [`test_context.py`](file:///e:/rouf/software-project/Ikkhi/tests/unit/test_context.py): Enforces that `CONTEXT.md` remains strictly bounded (<100 lines, <700 tokens) with 100% architectural coverage.
 - [`test_creative.py`](file:///e:/rouf/software-project/Ikkhi/tests/unit/test_creative.py): Validates cross-app creative shortcut resolution across all 8 supported creative applications.
 - [`test_experience.py`](file:///e:/rouf/software-project/Ikkhi/tests/unit/test_experience.py): Validates Bayesian confidence scores, mistake penalties, and user correction rollbacks.
+- [`test_gemini_models.py`](file:///e:/rouf/software-project/Ikkhi/tests/unit/test_gemini_models.py): Tests dynamic Gemini model probing (46 models), prompt characteristics matching (vision vs reasoning), and automated multi-model fallback chain.
+- [`test_logger.py`](file:///e:/rouf/software-project/Ikkhi/tests/unit/test_logger.py): Tests dual-stream rotating file logger (`storage/ikkhi.log`) and `InputCorrelationTracker` capturing user keys, window changes, and action dispatch.
 - [`test_monitors.py`](file:///e:/rouf/software-project/Ikkhi/tests/unit/test_monitors.py): Tests Win32 multi-monitor enumeration and coordinate normalization.
 - [`test_reader.py`](file:///e:/rouf/software-project/Ikkhi/tests/unit/test_reader.py): Validates screen reading aloud, clipboard capture, and zero-token SAPI speech dispatch.
 - [`test_router.py`](file:///e:/rouf/software-project/Ikkhi/tests/unit/test_router.py): Tests regex classification: fast-path local macros vs ambiguous cloud fallback queries.
@@ -527,13 +537,32 @@ e:/rouf/software-project/Ikkhi/
 
 ---
 
+### `dist/` — Standalone Distribution & Packaging
+- **Domain / Job:** Compiled standalone Windows distribution binaries with zero client dependencies.
+
+#### [`dist/Ikkhi.exe`](file:///e:/rouf/software-project/Ikkhi/dist/Ikkhi.exe)
+- **Job / Core Duty:** Standalone single-file executable (181.51 MB) bundling Python 3.12, PyQt6, NVIDIA CUDA runtime, CTranslate2, faster-whisper, and PyAV; launches the full desktop companion or headless daemon without Python installed.
+- **Inbound Connections:** User desktop execution, `launch_ikkhi.bat`.
+- **Outbound Connections:** Windows kernel, hardware audio, NVIDIA GPU, local storage.
+- **Resource Profile:** Fully self-contained single-file binary.
+
+---
+
 ### `scripts/` — Maintenance, Build & Diagnostic Routines
 - **Domain / Job:** Standalone scripts for environment validation, live hardware testing, and single-file binary compilation.
 - **Parent / Inbound Callers:** Developers, testers, automated build pipelines.
 
 #### [`scripts/build_executable.py`](file:///e:/rouf/software-project/Ikkhi/scripts/build_executable.py)
-- **Job / Core Duty:** Automates PyInstaller compilation to generate the standalone single-file binary `dist/Ikkhi.exe` (180MB) with bundled Qt, CUDA, and Win32 DLLs.
+- **Job / Core Duty:** Automates PyInstaller compilation to generate the standalone single-file binary `dist/Ikkhi.exe` (181.51 MB) with bundled Qt, CUDA, and Win32 DLLs.
 - **Outbound Connections:** `subprocess.run`, `PyInstaller`.
+
+#### [`scripts/diagnose_interactions.py`](file:///e:/rouf/software-project/Ikkhi/scripts/diagnose_interactions.py)
+- **Job / Core Duty:** Live user input correlation, audio RMS, Whisper STT, Edge Neural TTS, and Gemini model diagnostic monitor.
+- **Outbound Connections:** `src/ikkhi/core/logger.py`, `src/ikkhi/audio/capture.py`, `src/ikkhi/audio/tts.py`, `src/ikkhi/ai/router_model.py`.
+
+#### [`scripts/list_devices.py`](file:///e:/rouf/software-project/Ikkhi/scripts/list_devices.py)
+- **Job / Core Duty:** Host sound device & audio API inspection utility; lists MME, DirectSound, and WASAPI devices and channel counts.
+- **Outbound Connections:** `sounddevice`.
 
 #### [`scripts/test_live_gui.py`](file:///e:/rouf/software-project/Ikkhi/scripts/test_live_gui.py)
 - **Job / Core Duty:** Interactive visual GUI companion launcher; prints audio device diagnostics and launches the floating HUD, tray, and dashboard.
@@ -636,19 +665,22 @@ graph TD
             UNIV <--> EXP
         end
 
-        subgraph Tier_1 ["Tier 1: On-Demand Cloud Multimodal Fallback"]
+        subgraph Tier_1 ["Tier 1: Dynamic Reasoned Model Selection & Multimodal Fallback"]
             INDEXER["ScreenIndexer (indexer.py)"]
+            ROUTER_MOD["ReasonedModelOrchestrator (router_model.py)"]
             GEMINI["GeminiVisualClient (gemini.py)"]
             POINTER["VisualPointer (pointer.py)"]
             
             INDEXER -->|Compressed JPEG| GEMINI
+            GEMINI --> ROUTER_MOD
+            ROUTER_MOD -->|Automated Fallback Chain| GEMINI
             GEMINI -->|Target Coords| POINTER
         end
     end
 
     subgraph Audio_Feedback ["Speech Synthesis & Output"]
-        TTS["LocalSpeechEngine (tts.py - Win32 SAPI)"]
-        SPEAKERS["Workstation Audio Output"]
+        TTS["LocalSpeechEngine (tts.py - Edge Neural Ava + SAPI Fallback)"]
+        SPEAKERS["Workstation Audio Output (sounddevice PortAudio)"]
         
         ORCH -->|Spoken Confirmation| TTS
         READER -->|Screen Content| TTS

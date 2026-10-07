@@ -44,3 +44,15 @@ You are acting as an **Expert Python Automation Engineer & Local AI Integrator**
      - **`PROJECT_MAP.md`:** Update the Master Map dossier schema and connectivity matrices (governed by `ikkhi-map`).
      - **`PROGRESS.md`:** Update milestone checkboxes, test counts, and verification tiers.
      - **`CONVERSATION_SUMMARY.md`:** Record architectural decisions, milestones, and user feedback.
+
+9. **Mandatory Pre-Edit Impact & Dependency Analysis Invariant:**
+   - Prior to modifying, refactoring, or deleting any file or changing operational modes in the codebase, the AI agent MUST:
+     1. Consult `PROJECT_MAP.md` and the file connection tree to inspect inbound callers and outbound dependencies.
+     2. Formulate and state explicitly:
+        - **WHY:** Why is this specific file or mode being changed? What is the root motivation or failure condition?
+        - **DOWNSTREAM EFFECT:** What downstream effect will this modification have on other modules, callers, GUI threads, or standalone binaries connected to it?
+     3. Verify that the proposed changes preserve interface contracts, typing, and zero-token deterministic boundaries.
+
+10. **Continuous Code Map & Connection Tree Synchronization:**
+   - After ANY file is created, modified, or retired, `PROJECT_MAP.md` must be updated to keep the code map fresh.
+   - Future AI agents must ALWAYS consult `PROJECT_MAP.md` before editing to navigate the codebase instantly, avoiding slow blind searches and preventing accidental breakage of connected components.
