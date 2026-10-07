@@ -120,6 +120,8 @@ e:/rouf/software-project/Ikkhi/
 └── scripts/                                # Maintenance & diagnostic routines
     ├── validate_environment.py             # System & hardware validation routine
     ├── test_live_voice.py                  # Interactive microphone & voice verification tool
+    ├── test_live_wakeword.py               # Headless console wake-word & STT test script
+    ├── test_live_gui.py                    # Interactive visual GUI companion test launcher
     └── build_executable.py                 # PyInstaller single-file binary compilation pipeline
 ```
 
