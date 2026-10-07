@@ -150,9 +150,9 @@ pytest tests/
 
 ---
 
-## Credits, Acknowledgments & Open-Source Attributions
+## Credits & Open-Source Attributions
 
-Ikkhi stands on the shoulders of the open-source community, foundational AI research, and premier interface design systems. We gratefully acknowledge and credit the following projects, models, libraries, and design paradigms:
+Ikkhi builds upon foundational open-source AI models, automation libraries, and runtime frameworks. We gratefully acknowledge and credit the following projects and codebases:
 
 ### Core AI & Machine Learning Foundations
 * **[faster-whisper](https://github.com/SYSTRAN/faster-whisper) & [OpenAI Whisper](https://github.com/openai/whisper):** Developed by SYSTRAN and OpenAI, powered by [CTranslate2](https://github.com/OpenNMT/CTranslate2). Provides Ikkhi's sub-200ms local, private speech-to-text inference on NVIDIA CUDA cores.
@@ -170,14 +170,6 @@ Ikkhi stands on the shoulders of the open-source community, foundational AI rese
 ### Graphical User Interface & Frameworks
 * **[PyQt6 & The Qt Project](https://www.riverbankcomputing.com/software/pyqt/):** By Riverbank Computing and The Qt Company. Drives Ikkhi's hardware-accelerated, double-buffered companion HUD overlay, reactive waveform visualizer, and dashboard.
 * **[Pydantic](https://github.com/pydantic/pydantic):** By Samuel Colvin and contributors. Enforces type-safe system configuration, validation, and schema definitions.
-
-### Architectural & Design System Inspirations
-* **[Cloudflare](https://www.cloudflare.com/):** Inspired the high-density telemetry surfaces, hairline borders (`rgba(255,255,255,0.08)`), monospace metric readouts, and clean data tables in the Analytics Dashboard.
-* **[Apple](https://www.apple.com/) (macOS & visionOS):** Inspired the translucent frosted glassmorphism, fluid spring physics, ambient drop shadows, and organic micro-animations in the Floating Companion HUD Overlay.
-* **[Microsoft Fluent 2](https://fluent2.microsoft.design/):** Inspired the Windows 11 desktop harmony, Mica and Acrylic layered material elevations, and Segoe UI Variable typography.
-* **[OpenClaw](https://github.com/openclaw) (formerly Clicky):** Provided early conceptual inspiration for hands-free voice companions in creative software.
-* **[Linear](https://linear.app/) & [Vercel](https://vercel.com/):** Inspired the deep obsidian dark-mode palettes (`#07090e`), neon cyan/violet glowing states, and tactile keyboard shortcut keycaps (`<kbd>`).
-* **[Talon Voice](https://talonvoice.com/) & [Microsoft UFO](https://github.com/microsoft/UFO):** Prior art in desktop accessibility grammars and dual-agent Windows UI automation.
 
 ---
 
