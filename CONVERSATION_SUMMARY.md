@@ -119,5 +119,6 @@
   - **UI Codebase Polished:** Updated `src/ikkhi/ui/theme.py` and `src/ikkhi/ui/dashboard.py` with the new tokens and JetBrains Mono monospace telemetry metrics.
   - **Google AI Studio Clarification:** Reconfirmed that Google AI Studio is strictly a Tier 1 on-demand fallback for ambiguous visual screen grounding. All Tier 0 local macro operations, local speech recognition, wake-word, and screen reading aloud operate 100% offline with zero cloud tokens.
   - **Live Testing Verification:** Fixed Whisper VAD filter truncation on short speech buffers; verified that GUI and wake-word listeners operate smoothly with **46/46 automated tests passing (100% pass rate)**.
+  - **Open-Source Credits Section:** Added dedicated "Credits & Open-Source Attributions" in `README.md` strictly crediting external open-source codebases, libraries, models, and runtime frameworks (`faster-whisper`, `openWakeWord`, `Piper TTS`, `DeepSeek AI`, `pywinauto`, `PyAutoGUI`, `pywin32`, `sounddevice`, `PyQt6`, `Pydantic`, `google-genai`), omitting design/aesthetic references.
 
 
