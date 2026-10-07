@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 
 def probe_device_stream_params(dev_idx: int) -> Optional[Tuple[int, int]]:
     """
-    Tests opening a non-blocking callback stream on dev_idx across common sample rates and channels.
+    Tests opening a non-blocking stream on dev_idx across common sample rates and channels.
+    Uses PortAudio hardware check and immediate stream initialization.
     Returns (sample_rate, channels) on first successful configuration, or None if device cannot stream.
     """
     candidates = [
@@ -28,23 +29,19 @@ def probe_device_stream_params(dev_idx: int) -> Optional[Tuple[int, int]]:
         (48000, 2),
     ]
     for sr, ch in candidates:
-        received = []
-        def _dummy_cb(indata, frames, time_info, status):
-            received.append(True)
         try:
+            sd.check_input_settings(device=dev_idx, samplerate=sr, channels=ch)
             stream = sd.InputStream(
                 device=dev_idx,
                 samplerate=sr,
                 channels=ch,
                 dtype="float32",
-                callback=_dummy_cb
             )
             stream.start()
-            time.sleep(0.04)
+            time.sleep(0.02)
             stream.stop()
             stream.close()
-            if len(received) > 0:
-                return (sr, ch)
+            return (sr, ch)
         except Exception:
             continue
     return None
@@ -54,7 +51,7 @@ def resolve_optimal_device_params(configured: Optional[int | str] = None) -> Tup
     """
     Intelligently identifies and verifies a working recording device, returning:
     (device_index, native_sample_rate, channels, device_name).
-    Prioritizes real physical microphones (e.g. USB Mic, Headset) and avoids virtual cables.
+    Prioritizes real physical USB microphones and active Windows defaults over virtual cables and unplugged jacks.
     Guarantees that the resolved device will not crash PortAudio with PaErrorCode -9996.
     """
     try:
@@ -85,8 +82,8 @@ def resolve_optimal_device_params(configured: Optional[int | str] = None) -> Tup
         if def_idx is not None and 0 <= def_idx < len(devices):
             d = devices[def_idx]
             dname = d.get("name", "").lower()
-            # If default input is a legitimate physical mic (not virtual cable or loopback), probe it
-            if "cable" not in dname and "virtual" not in dname and "stereo mix" not in dname:
+            # If default input is a legitimate physical mic (not virtual cable, stereo mix, or loopback), probe it
+            if "cable" not in dname and "virtual" not in dname and "stereo mix" not in dname and "line in" not in dname:
                 params = probe_device_stream_params(def_idx)
                 if params is not None:
                     api = apis[d.get("hostapi", 0)] if d.get("hostapi", 0) < len(apis) else ""
@@ -95,17 +92,33 @@ def resolve_optimal_device_params(configured: Optional[int | str] = None) -> Tup
     except Exception as exc:
         logger.debug("Default input probe error: %s", exc)
 
-    # 3. Scan all devices for physical microphones (USB, Headset, Mic Array, Realtek), prioritizing MME / WASAPI
-    # Sort host APIs: MME (0) and WASAPI (2) first, avoid WDM-KS (3) kernel locking
+    # 3. Scan all devices for physical microphones (USB first, then Headset, then other mics), prioritizing MME / WASAPI
     candidate_devices = []
     for idx, d in enumerate(devices):
         if d.get("max_input_channels", 0) > 0:
             name = d.get("name", "").lower()
             hostapi = d.get("hostapi", 0)
             if "cable" not in name and "virtual" not in name and "stereo mix" not in name and "line in" not in name:
-                is_physical = any(k in name for k in ("mic", "headset", "usb", "array", "realtek"))
-                # Priority: 0 for MME/WASAPI physical, 1 for DirectSound physical, 2 for WDM-KS physical, 3 for other
-                priority = 0 if is_physical and hostapi in (0, 2) else (1 if is_physical and hostapi == 1 else (2 if is_physical else 3))
+                is_usb = "usb" in name
+                is_physical = any(k in name for k in ("mic", "headset", "array", "realtek"))
+                
+                # Priority tiering:
+                # 0: Physical USB microphone on MME (0) or WASAPI (2)
+                # 1: Physical USB microphone on DirectSound (1)
+                # 2: Other physical headset/mic on MME/WASAPI
+                # 3: Other physical headset/mic on DirectSound
+                # 50+: WDM-KS (avoid exclusive kernel streaming lock unless absolutely nothing else exists)
+                if hostapi == 3:  # WDM-KS
+                    priority = 50 if is_usb else 60
+                elif is_usb:
+                    priority = 0 if hostapi in (0, 2) else 1
+                elif is_physical and "realtek" not in name:
+                    priority = 2 if hostapi in (0, 2) else 3
+                elif is_physical:
+                    priority = 4 if hostapi in (0, 2) else 5
+                else:
+                    priority = 10
+
                 candidate_devices.append((priority, idx, d))
 
     candidate_devices.sort(key=lambda x: x[0])

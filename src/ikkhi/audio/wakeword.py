@@ -145,18 +145,20 @@ class WakeWordListener:
             if len(noise_samples) < 15:
                 noise_samples.append(rms)
                 if len(noise_samples) == 15:
-                    noise_floor = max(0.002, float(np.mean(noise_samples)) * 1.5)
-                    logger.debug("WakeWord noise floor calibrated to: %.6f", noise_floor)
+                    noise_floor = max(0.0001, float(np.mean(noise_samples)) * 1.5)
+                    logger.info("WakeWord ambient noise floor calibrated to: %.6f", noise_floor)
                 continue
 
             # Continuous slow adaptation during silence
             if not is_in_speech:
                 noise_floor = 0.96 * noise_floor + 0.04 * rms
 
-            speech_trigger = max(0.010, noise_floor * 2.0)
+            speech_trigger = max(0.0015, noise_floor * 2.2)
 
             if rms >= speech_trigger:
                 # Active speech chunk
+                if not is_in_speech:
+                    logger.info("Voice activity detected (RMS: %.5f). Listening...", rms)
                 is_in_speech = True
                 silence_chunks = 0
                 speech_buffer.append(chunk)
@@ -189,10 +191,11 @@ class WakeWordListener:
                                         logger.debug("WakeWord resampling error: %s", exc)
 
                             try:
+                                logger.info("Transcribing speech segment (%d samples)...", len(full_audio))
                                 transcript, _ = self.stt_engine.transcribe(full_audio)
                                 clean = transcript.lower().strip()
                                 if clean:
-                                    logger.debug("Ambient mic heard: '%s'", clean)
+                                    logger.info("Acoustic listener heard: '%s'", clean)
 
                                 # Check against all phonetic variations of wake triggers
                                 matched_kw = None
@@ -202,7 +205,7 @@ class WakeWordListener:
                                         break
 
                                 if matched_kw:
-                                    logger.info("Wake-word matched: '%s' in transcript: '%s'", matched_kw, clean)
+                                    logger.info(">>> [WAKE-WORD MATCHED!] Trigger: '%s' in: '%s' <<<", matched_kw, clean)
                                     cooldown_until = now + 2.0
                                     # Extract remainder command if uttered in same sentence
                                     remainder = clean.split(matched_kw, 1)[-1].strip(" ,.!?")
