@@ -2,11 +2,15 @@
 Configuration management system for Ikkhi using Pydantic Settings.
 """
 
+import os
 from pathlib import Path
 from typing import Literal
 import yaml
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+load_dotenv()
 
 
 class SystemSettings(BaseModel):
@@ -36,7 +40,8 @@ class AITierSettings(BaseModel):
     model_name: str = "gemini-2.0-flash"
     max_output_tokens: int = 350
     temperature: float = 0.1
-    gemini_api_key: str = Field(default="", alias="GEMINI_API_KEY")
+    gemini_api_key: str = Field(default_factory=lambda: os.getenv("GEMINI_API_KEY", ""))
+    gemini_project_id: str = Field(default_factory=lambda: os.getenv("GEMINI_PROJECT_ID", ""))
 
 
 class ScreenIndexingSettings(BaseModel):
@@ -87,5 +92,12 @@ class AppConfig(BaseSettings):
 
         with open(p, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
+
+        # Overlay environment secrets for ai_tier if not explicitly set in YAML
+        if "ai_tier" in data and isinstance(data["ai_tier"], dict):
+            if not data["ai_tier"].get("gemini_api_key"):
+                data["ai_tier"]["gemini_api_key"] = os.getenv("GEMINI_API_KEY", "")
+            if not data["ai_tier"].get("gemini_project_id"):
+                data["ai_tier"]["gemini_project_id"] = os.getenv("GEMINI_PROJECT_ID", "")
 
         return cls(**data)
