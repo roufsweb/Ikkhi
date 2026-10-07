@@ -7,6 +7,7 @@ You are acting as an **Expert Python Automation Engineer & Local AI Integrator**
 1. **100% Local-First & Absolute Privacy:**
    - Never route audio, screenshots, or user data to external cloud APIs during runtime.
    - All models (wake-word, STT, LLM parsing, TTS) must run locally (e.g., openWakeWord, faster-whisper, Ollama/vLLM/llama.cpp, Piper TTS).
+   - Google AI Studio is used strictly on-demand for ambiguous visual queries with explicit token and image size caps.
 
 2. **Zero Hallucination in Execution (Deterministic Mapping):**
    - The LLM parses natural language user intent and maps it strictly to registered, deterministic Python action functions / macros.
@@ -21,10 +22,25 @@ You are acting as an **Expert Python Automation Engineer & Local AI Integrator**
    - Idle state must use practically 0% CPU/GPU: Multi-stage pipeline (Wake-word -> STT -> Parser -> Action).
    - Never run continuous whisper transcription in the background.
 
-5. **Living Conversation & Documentation Tracking (Mandatory Rule):**
-   - **Ultra-Compact Context Snapshot:** Always maintain and update `CONTEXT.md` (<100 lines, <700 tokens) to ensure any new chat session or external AI agent/model can immediately ingest the active state, golden rules, and command workflows in under 30 seconds without context bloat.
-   - **Continuous Summary:** Always maintain and update `CONVERSATION_SUMMARY.md` whenever key decisions, architectural shifts, or milestones are reached.
-   - **Project Progress Synchronization:** Always update `PROGRESS.md` after any batch of code changes or milestone progression. Check off completed items and record timestamps.
-   - **Project Map Maintenance (Governed by `ikkhi-map` skill):** Always maintain and update `PROJECT_MAP.md` (the Master Map) whenever new files, directories, or core modules are added, modified, or retired. Adhere strictly to the folder/file dossier schema and connection matrices defined in [`.agents/skills/ikkhi-map/SKILL.md`](file:///e:/rouf/software-project/Ikkhi/.agents/skills/ikkhi-map/SKILL.md).
-   - **Batch Update Cadence:** After every significant set of code changes (3+ files or 1 completed feature), run the documentation update routine to ensure all project tracking files are in sync.
+5. **Hobbyist / Hacker Standard (Zero AI Clichés & No Emoji Spam):**
+   - Treat Ikkhi as a clean, fast, hackable personal developer tool, never as an enterprise B2B SaaS startup.
+   - No emojis on UI tabs, buttons, or operational badges. Use clean plain text (`local`, `cloud`, `Activity`, `Settings`).
+   - No fake corporate product frameworks (no RICE scoring, no VC pitch decks, no vanity ROI dashboards).
 
+6. **Zero-Guesswork AI Handoff Invariant (Mandatory for All Future Agents):**
+   - Every AI agent working on this repository must document all code changes, module connections, and UI interactions with absolute clarity.
+   - Every file must have an entry in `PROJECT_MAP.md` specifying its Job, Inbound Callers, Outbound Dependencies, and Key Interfaces.
+   - Future AI agents must be able to read `CONTEXT.md` and `PROJECT_MAP.md` to understand the entire architecture in under 30 seconds with zero guessing about what previous agents built.
+
+7. **Three-Tier Verification & Status Tracking:**
+   - Always track task and feature readiness across three explicit states in `PROGRESS.md`:
+     - **[Auto-Verified]:** Verified by automated unit & integration test suites (`pytest`).
+     - **[User-Approved]:** Reviewed, validated, and explicitly accepted by the user.
+     - **[Needs Live Testing]:** Implemented and unit-tested, but requires user physical hardware verification (e.g., live microphone acoustics, specific desktop software versions).
+
+8. **Living Documentation & Synchronization Protocol (Mandatory Batch Cadence):**
+   - After every significant set of code changes (3+ files or 1 completed feature), run the documentation update routine:
+     - **`CONTEXT.md`:** Keep strictly under 100 lines and under 700 tokens for instant agent onboarding.
+     - **`PROJECT_MAP.md`:** Update the Master Map dossier schema and connectivity matrices (governed by `ikkhi-map`).
+     - **`PROGRESS.md`:** Update milestone checkboxes, test counts, and verification tiers.
+     - **`CONVERSATION_SUMMARY.md`:** Record architectural decisions, milestones, and user feedback.

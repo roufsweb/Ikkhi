@@ -36,7 +36,7 @@
 
 ## 4. Developer & AI Agent Command Cheat Sheet
 ```powershell
-# Run full automated test suite (46 unit & integration tests)
+# Run full automated test suite (47 unit & integration tests)
 .venv\Scripts\pytest.exe -v
 
 # Launch Desktop GUI Companion (Floating HUD + Tray + Dashboard)
