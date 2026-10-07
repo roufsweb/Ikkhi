@@ -128,3 +128,10 @@
   - Verified `GeminiVisualClient` initializes successfully with configured credentials.
   - Confirmed 100% test pass rate (**46/46 automated tests passing**).
   - Pushed clean, secret-free codebase updates to `https://github.com/roufsweb/Ikkhi.git` on branch `main`.
+- **Master Project Map & `ikkhi-map` Skill Governance (Phase 13):**
+  - Designed and deployed dedicated AI Skill protocol in [`.agents/skills/ikkhi-map/SKILL.md`](file:///e:/rouf/software-project/Ikkhi/.agents/skills/ikkhi-map/SKILL.md) governing the standardized schema, naming conventions, and autonomous synchronization triggers for the codebase topology.
+  - Authored comprehensive Master Project Map & Architectural Connectivity Dossier in [`PROJECT_MAP.md`](file:///e:/rouf/software-project/Ikkhi/PROJECT_MAP.md) detailing every directory, subdirectory, and file in the workspace.
+  - Implemented bidirectional connection mappings: Inbound Callers (who imports/triggers each file) and Outbound Dependencies (what each file calls/imports), Key Interfaces, and Resource/Token Budgets.
+  - Updated Global Mermaid Dependency Graph with accurate active module names (cleaning up legacy paths).
+  - Documented end-to-end operational pipelines: Spoken Execution (Tier 0 Fast-Path), Multimodal Screen Grounding (Tier 1 Fallback), and Experiential Mistake Learning Loop.
+  - Integrated `ikkhi-map` governance protocol across [`AGENTS.md`](file:///e:/rouf/software-project/Ikkhi/AGENTS.md) and [`CONTEXT.md`](file:///e:/rouf/software-project/Ikkhi/CONTEXT.md).

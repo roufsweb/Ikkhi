@@ -159,3 +159,11 @@
 - [x] Verify `GeminiVisualClient` initializes successfully with configured credentials
 - [x] Verify all 46 automated unit and integration tests continue to pass (100% pass rate)
 - [x] Commit clean, secret-free code to Git and push to `origin/main`
+
+### Phase 13: Master Project Map & `ikkhi-map` Skill Governance 🟢
+- [x] Authored AI Skill Protocol [`.agents/skills/ikkhi-map/SKILL.md`](file:///e:/rouf/software-project/Ikkhi/.agents/skills/ikkhi-map/SKILL.md) establishing standardized naming schemes, file/folder dossier templates, and autonomous update triggers
+- [x] Authored canonical Master Project Map & Architectural Connectivity Dossier in [`PROJECT_MAP.md`](file:///e:/rouf/software-project/Ikkhi/PROJECT_MAP.md) detailing every directory, subdirectory, and file
+- [x] Mapped bidirectional connectivity: Inbound Callers, Outbound Dependencies, Key Interfaces, and Resource/Token Budgets for all components
+- [x] Updated Global Mermaid Dependency Graph with accurate, verified module names
+- [x] Documented end-to-end operational pipelines: Spoken Execution (Tier 0), Multimodal Screen Grounding (Tier 1), and Experiential Mistake Learning
+- [x] Linked `ikkhi-map` governance protocol across [`AGENTS.md`](file:///e:/rouf/software-project/Ikkhi/AGENTS.md) and [`CONTEXT.md`](file:///e:/rouf/software-project/Ikkhi/CONTEXT.md)

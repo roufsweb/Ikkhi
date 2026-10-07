@@ -69,7 +69,7 @@
 
 ## 6. Deep Documentation References
 - Detailed Roadmap & Checklist: [`PROGRESS.md`](file:///e:/rouf/software-project/Ikkhi/PROGRESS.md)
-- Complete Codebase Inventory: [`PROJECT_MAP.md`](file:///e:/rouf/software-project/Ikkhi/PROJECT_MAP.md)
+- Master Project Map & Dossier: [`PROJECT_MAP.md`](file:///e:/rouf/software-project/Ikkhi/PROJECT_MAP.md) (Governed by [`ikkhi-map`](file:///e:/rouf/software-project/Ikkhi/.agents/skills/ikkhi-map/SKILL.md))
 - DeepSeek Architectural Innovations: [`docs/DEEPSEEK_AND_AGENT_INNOVATIONS.md`](file:///e:/rouf/software-project/Ikkhi/docs/DEEPSEEK_AND_AGENT_INNOVATIONS.md)
 - OpenClaw Comparative Analysis: [`docs/COMPARISON_OPENCLAW.md`](file:///e:/rouf/software-project/Ikkhi/docs/COMPARISON_OPENCLAW.md)
 - Creative Apps & Experience Engine Plan: [`docs/CREATIVE_APPS_AND_EXPERIENCE_PLAN.md`](file:///e:/rouf/software-project/Ikkhi/docs/CREATIVE_APPS_AND_EXPERIENCE_PLAN.md)
