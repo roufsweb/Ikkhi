@@ -99,7 +99,7 @@ e:/rouf/software-project/Ikkhi/
 │           ├── beacon.py                   # HeyClicky-style visual target beacon & cursor ripple indicator
 │           └── app.py                      # Master Qt application coordinator & window manager
 │
-├── tests/                                  # Comprehensive automated test suite (55 tests, 100% pass)
+├── tests/                                  # Comprehensive automated test suite (57 tests, 100% pass)
 │   ├── __init__.py
 │   ├── integration/                        # End-to-end integration tests
 │   │   ├── __init__.py
@@ -116,7 +116,7 @@ e:/rouf/software-project/Ikkhi/
 │       ├── test_monitors.py                # Multi-monitor enumeration & normalization tests
 │       ├── test_reader.py                  # Screen reading & text-to-speech routing tests
 │       ├── test_router.py                  # Intent classification & routing tests
-│       ├── test_security.py                # Defensive hardening & path traversal tests
+│       ├── test_security.py                # Defensive hardening, privacy shield & path traversal tests
 │       ├── test_speech.py                  # Speech synthesis lifecycle tests
 │       ├── test_ui.py                      # GUI widgets, tray, overlay & settings tests
 │       └── test_universal.py               # Universal inspector & adaptive profile tests
@@ -128,7 +128,9 @@ e:/rouf/software-project/Ikkhi/
 │   ├── test_live_gui.py                    # Interactive visual GUI companion test launcher
 │   ├── test_live_voice.py                  # Interactive microphone & voice verification tool
 │   ├── test_live_wakeword.py               # Headless console wake-word & STT test script
+│   ├── test_visual_navigation.py           # Standalone visual navigation & telemetry tester (<80KB WebP, UIA fast-path)
 │   └── validate_environment.py             # Host environment & GPU hardware validator
+
 │
 ├── storage/                                # Persistent application knowledge (Git-ignored)
 │   ├── profiles/                           # Per-application JSON control maps & learned macros
@@ -151,7 +153,9 @@ e:/rouf/software-project/Ikkhi/
 ├── Ikkhi.spec                              # PyInstaller standalone executable bundling specification
 ├── launch_ikkhi.bat                        # Windows desktop launcher batch script
 ├── launch_tester.bat                       # Wake-word diagnostic console launcher batch script
+├── launch_visual_tester.bat                # Visual navigation & guidance interactive launcher batch script
 ├── .env                                    # Local private credentials (Git-ignored)
+
 ├── .env.example                            # Public configuration template
 └── .gitignore                              # Comprehensive Python, OS & secret ignore rules
 ```
@@ -334,11 +338,12 @@ e:/rouf/software-project/Ikkhi/
 - **Resource Profile:** Win32 system query (<1ms).
 
 #### [`src/ikkhi/vision/indexer.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/vision/indexer.py)
-- **Job / Core Duty:** Captures and crops the active foreground window, compresses images (JPEG quality 80, max 1024px dimension), and caches representations to minimize token consumption when querying Gemini.
-- **Inbound Connections:** `orchestrator.py`, `gemini.py`, `test_reader.py`.
-- **Outbound Connections:** `PIL.Image`, `pyautogui`, `io.BytesIO`.
-- **Key Interfaces:** `ScreenIndexer`, `IndexedScreen`, `capture_active_window() -> IndexedScreen`.
-- **Resource Profile:** In-memory compression (<20ms, reduces token payload by >75%).
+- **Job / Core Duty:** Captures and crops the active foreground window, compresses images (WebP quality 75, clamped 768px dimension), calculates live window coordinates, and enforces a privacy security shield on credential managers (Bitwarden, 1Password, KeePass).
+- **Inbound Connections:** `orchestrator.py`, `gemini.py`, `scripts/test_visual_navigation.py`, `test_security.py`.
+- **Outbound Connections:** `PIL.Image`, `PIL.ImageGrab`, `io.BytesIO`, `ctypes`, `MultiMonitorManager`, `ScreenSecurityViolation`.
+- **Key Interfaces:** `ScreenIndexer`, `IndexedScreen`, `capture_active_window() -> IndexedScreen`, `map_to_screen_coordinates(norm_x, norm_y) -> (abs_x, abs_y)`.
+- **Resource Profile:** In-memory WebP compression (<80KB payload, $\le 258$ vision tokens, <25ms capture).
+
 
 #### [`src/ikkhi/vision/pointer.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/vision/pointer.py)
 - **Job / Core Duty:** Glides the mouse cursor to target UI coordinates using smooth cubic bezier easing and flashes a transparent highlight circle to guide user attention.
@@ -362,11 +367,12 @@ e:/rouf/software-project/Ikkhi/
 - **Resource Profile:** Deterministic dictionary dispatch (<0.1ms).
 
 #### [`src/ikkhi/automation/inspector.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/automation/inspector.py)
-- **Job / Core Duty:** Traverses the Windows UI Automation (UIA) accessibility tree of any foreground application (DaVinci, Blender, Chrome, VS Code) extracting interactable buttons, menus, and coordinates.
-- **Inbound Connections:** `universal.py`, `profiles.py`, `test_universal.py`.
-- **Outbound Connections:** `pywinauto.uia_element_info.UIAElementInfo`, `uiautomation`.
-- **Key Interfaces:** `UniversalUIInspector`, `UIElementDescriptor`, `inspect_active_window(depth: int = 4) -> List[UIElementDescriptor]`.
-- **Resource Profile:** Local Win32 accessibility IPC (sub-50ms tree traversal).
+- **Job / Core Duty:** Traverses the Windows UI Automation (UIA) accessibility tree of any foreground application extracting interactable buttons, menus, tabs, and fields; provides Tier 1.0 fast-path text search (`find_control_by_label`).
+- **Inbound Connections:** `universal.py`, `orchestrator.py`, `scripts/test_visual_navigation.py`, `test_universal.py`.
+- **Outbound Connections:** `pywinauto.Application`, `ctypes`, `IndexedControl`, `WindowContext`.
+- **Key Interfaces:** `UniversalUIInspector`, `WindowContext`, `get_foreground_context() -> Optional[WindowContext]`, `inspect_controls(hwnd) -> Dict[str, IndexedControl]`, `find_control_by_label(hwnd, query) -> Optional[IndexedControl]`.
+- **Resource Profile:** Local Win32 accessibility IPC (sub-25ms fast search, 0 tokens, $0.00 cost).
+
 
 #### [`src/ikkhi/automation/reader.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/automation/reader.py)
 - **Job / Core Duty:** Reads text on the screen aloud using zero-token local speech synthesis; captures selected text via non-destructive clipboard operations or traverses UIA `TextPattern`/`ValuePattern`.
@@ -474,11 +480,12 @@ e:/rouf/software-project/Ikkhi/
 - **Resource Profile:** Non-blocking async worker; guarantees uncompromised 60 FPS GUI responsiveness.
 
 #### [`src/ikkhi/ui/beacon.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/ui/beacon.py)
-- **Job / Core Duty:** HeyClicky-style visual target beacon and cursor highlight ripple overlay; renders an animated neon cyan/violet dual-ring radar ripple directly at target coordinates.
-- **Inbound Connections:** `src/ikkhi/vision/pointer.py` (`CursorPointer.point_to`), `tests/unit/test_ui.py`.
+- **Job / Core Duty:** HeyClicky-style visual target beacon and cursor highlight ripple overlay; renders an animated neon cyan/violet dual-ring radar ripple directly at target coordinates; includes thread-safe QObject cross-thread dispatcher.
+- **Inbound Connections:** `src/ikkhi/vision/pointer.py` (`CursorPointer.point_to`), `scripts/test_visual_navigation.py`, `tests/unit/test_ui.py`.
 - **Outbound Connections:** `PyQt6.QtWidgets`, `PyQt6.QtGui`, `PyQt6.QtCore`.
-- **Key Interfaces:** `CursorTargetBeacon`, `show_visual_beacon(screen_x: int, screen_y: int, duration: float = 1.5)`.
+- **Key Interfaces:** `CursorTargetBeacon`, `_BeaconDispatcher`, `show_visual_beacon(screen_x: int, screen_y: int, duration: float = 1.5)`.
 - **Resource Profile:** Non-activating frameless overlay with 40 FPS timer decay (<1% GPU).
+
 
 #### [`src/ikkhi/ui/app.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/ui/app.py)
 - **Job / Core Duty:** Master Qt Application Coordinator; manages application lifecycle, positions the HUD overlay at the top-center of the primary monitor, and wires type-safe signals between controller, overlay, dashboard, and tray.

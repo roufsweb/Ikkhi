@@ -22,6 +22,11 @@ class ScreenCaptureError(IkkhiError):
     """Raised when the screen indexer fails to query or crop the active window."""
     pass
 
+class ScreenSecurityViolation(ScreenCaptureError):
+    """Raised when visual screen capture is blocked to protect sensitive or credential data."""
+    pass
+
 class ConfigurationError(IkkhiError):
     """Raised when the application configuration is invalid or missing required parameters."""
     pass
+

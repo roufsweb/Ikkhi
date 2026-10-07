@@ -37,11 +37,15 @@ ai_tier:
   temperature: 0.1
 
 screen_indexing:
-  # Credit & Token optimization
+  # Credit & Token optimization: clamp to 768px + WebP = <80KB & <260 tokens
   crop_active_window_only: true
-  max_image_dimension: 1024 # Resizes before sending to Gemini to minimize tokens
+  max_image_dimension: 768
+  image_format: "WEBP"
+  webp_quality: 75
   jpeg_quality: 80
   cache_ttl_seconds: 5
+  security_shield_enabled: true
+
 
 pointer:
   # Visual cursor pointing behavior

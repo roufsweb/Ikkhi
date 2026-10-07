@@ -56,8 +56,13 @@ class AITierSettings(BaseModel):
 class ScreenIndexingSettings(BaseModel):
     crop_active_window_only: bool = True
     max_image_dimension: int = 1024
+    image_format: str = "WEBP"
+    webp_quality: int = 75
     jpeg_quality: int = 80
     cache_ttl_seconds: int = 5
+    security_shield_enabled: bool = True
+
+
 
 
 class PointerSettings(BaseModel):

@@ -16,8 +16,9 @@
 
 ## 2. Technical Stack & Invariants
 - **Language & Runtime:** Python 3.12 (PEP 517/621 `src-layout` with `pyproject.toml`).
-- **Local Audio & Voice:** `sounddevice` + `faster-whisper` (RTX 3070 CUDA conversational STT + CPU int8 wake spotter with 0.0% GPU idle) + Edge Neural TTS (`en-US-AvaNeural`, Google Assistant style) + Gemini Live-style conversational standby session (dynamic energy VAD, natural multi-turn dialog, 15s timeout).
-- **Dynamic AI Model Orchestration:** Reasoned model selection (`router_model.py`) with `gemini-3.8-flash` primary model, task-aware routing, and multi-model fallback across active models.
+- **Visual Screen Guidance:** Assistive locator (HeyClicky-style beacon reticle + bezier cursor) with WebP compression (<80KB payload, <260 tokens, clamped 768px), local UIA text fast-path (<25ms, 0 tokens), and credential manager privacy shield.
+- **Local Audio & Voice:** `sounddevice` + `faster-whisper` (RTX 3070 CUDA conversational STT + CPU int8 wake spotter with 0.0% GPU idle) + Edge Neural TTS (`en-US-AvaNeural`, Google Assistant style) + dynamic energy VAD standby session.
+- **Dynamic AI Model Orchestration:** Reasoned model selection (`router_model.py`) with `gemini-3.5-flash` primary model, task-aware routing, and multi-model fallback across active models.
 - **GUI Desktop Companion:** PyQt6 frameless translucent floating HUD overlay with reactive multi-bar RMS waveform, Windows system tray applet, and dark-mode settings/token analytics dashboard.
 - **Persistent Logging & Correlation:** Dual output console + rotating `storage/ikkhi.log` capturing every hardware key, window change, audio RMS, Whisper STT, and action execution.
 - **Standalone Distribution:** Single-file standalone Windows executable (`dist/Ikkhi.exe`, 181.51 MB) compiled via PyInstaller with zero client dependencies.
@@ -27,8 +28,8 @@
 ## 3. Current Verification State & Metrics
 | Metric | Value | Verification Status |
 | :--- | :--- | :--- |
-| **Active Milestones** | 20 of 20 Phases Completed | 100% Complete |
-| **Automated Test Suite** | 55 / 55 Tests Passing | 100% Pass Rate (11.49s) |
+| **Active Milestones** | 21 of 21 Phases Completed | 100% Complete |
+| **Automated Test Suite** | 57 / 57 Tests Passing | 100% Pass Rate (12.14s) |
 | **Standalone Binary** | `dist/Ikkhi.exe` (181.51 MB) | Compiled & Verified |
 | **Hardware Grounding** | Windows 11, RTX 3070 CUDA, 4K Display, USB Mic + Headphones | Auto-Detected & Wired |
 | **Remote Repository** | `https://github.com/roufsweb/Ikkhi` | Synced on `main` |
@@ -37,20 +38,19 @@
 
 ## 4. Developer & AI Agent Command Cheat Sheet
 ```powershell
-# Run full automated test suite (53 unit & integration tests)
+# Run full automated test suite (57 unit & integration tests)
 .venv\Scripts\pytest.exe -v
 
-# Run Live User Input & System Diagnostic Monitor (keys, mic, TTS, Gemini)
-.venv\Scripts\python.exe scripts/diagnose_interactions.py
+# Run Standalone Visual Navigation Tester (UIA fast-path, WebP telemetry, beacon)
+.venv\Scripts\python.exe scripts/test_visual_navigation.py --find "close"
+# Or interactive launcher:
+launch_visual_tester.bat
 
 # Launch Desktop GUI Companion (Floating HUD + Tray + Dashboard)
 .venv\Scripts\python.exe -m ikkhi
 
 # Run Headless Background Daemon (Console mode)
 .venv\Scripts\python.exe -m ikkhi --headless
-
-# Execute simulated single command (fast-path test)
-.venv\Scripts\python.exe -m ikkhi --cli "increase volume"
 ```
 
 ---

@@ -27,7 +27,19 @@ class UniversalUIInspector:
         user32 = ctypes.windll.user32
         hwnd = user32.GetForegroundWindow()
         if not hwnd:
-            return None
+            hwnd = user32.GetDesktopWindow()
+            if not hwnd:
+                return None
+            rect = ctypes.wintypes.RECT()
+            user32.GetWindowRect(hwnd, ctypes.byref(rect))
+            return WindowContext(
+                hwnd=hwnd,
+                title="Desktop",
+                process_name="explorer.exe",
+                pid=0,
+                bounding_box=(rect.left, rect.top, rect.right, rect.bottom)
+            )
+
 
         # Extract Window Title
         length = user32.GetWindowTextLengthW(hwnd)
@@ -96,7 +108,7 @@ class UniversalUIInspector:
                         continue
 
                     # Filter for interactive element types
-                    if ctrl_type in ("Button", "MenuItem", "TabItem", "CheckBox", "RadioButton", "Hyperlink"):
+                    if ctrl_type in ("Button", "MenuItem", "TabItem", "CheckBox", "RadioButton", "Hyperlink", "Edit", "SplitButton", "ListItem", "TreeItem"):
                         rect = elem.rectangle()
                         # Calculate relative center within the window
                         center_x = (rect.left + rect.right) / 2
@@ -118,3 +130,50 @@ class UniversalUIInspector:
             pass
 
         return discovered
+
+    def find_control_by_label(self, hwnd: int, query: str) -> Optional[IndexedControl]:
+        """
+        Locates a control on the target window matching the user query text.
+        Executes multi-tier matching: exact match -> substring match -> stripped keywords.
+        """
+        if not hwnd or not query:
+            return None
+
+        clean_q = query.strip().lower()
+        # Remove common request qualifiers
+        for prefix in ("where is the ", "where is ", "point to the ", "point to ", "find the ", "find ", "locate the ", "locate "):
+            if clean_q.startswith(prefix):
+                clean_q = clean_q[len(prefix):].strip()
+                break
+
+        # Also strip trailing noise words if present
+        stripped_q = clean_q
+        for suffix in (" button", " menu", " tab", " option", " icon", " bar"):
+            if stripped_q.endswith(suffix):
+                stripped_q = stripped_q[:-len(suffix)].strip()
+                break
+
+        controls = self.inspect_controls(hwnd)
+        if not controls:
+            return None
+
+        # Priority 1: Exact match with clean_q
+        if clean_q in controls:
+            return controls[clean_q]
+
+        # Priority 2: Exact match with stripped_q
+        if stripped_q in controls:
+            return controls[stripped_q]
+
+        # Priority 3: Substring match (query within control name)
+        for name_key, ctrl in controls.items():
+            if clean_q in name_key or stripped_q in name_key:
+                return ctrl
+
+        # Priority 4: Reverse substring match (control name within query, minimum 3 chars)
+        for name_key, ctrl in controls.items():
+            if len(name_key) >= 3 and (name_key in clean_q or name_key in stripped_q):
+                return ctrl
+
+        return None
+

@@ -59,3 +59,58 @@ def test_registry_arbitrary_execution_guard():
         
     with pytest.raises(ActionExecutionError):
         registry.execute("__import__('os').system", {})
+
+
+def test_screen_indexer_security_shield():
+    """Verify that sensitive processes and credential managers are strictly blocked from capture."""
+    from ikkhi.core.config import ScreenIndexingSettings
+    from ikkhi.core.exceptions import ScreenSecurityViolation
+    from ikkhi.vision.indexer import ScreenIndexer
+
+    settings = ScreenIndexingSettings(security_shield_enabled=True)
+    indexer = ScreenIndexer(settings)
+
+    # 1. Blocked process names
+    with pytest.raises(ScreenSecurityViolation):
+        indexer._check_security_shield("Bitwarden.exe", "Vault - Bitwarden")
+
+    with pytest.raises(ScreenSecurityViolation):
+        indexer._check_security_shield("1Password.exe", "1Password")
+
+    with pytest.raises(ScreenSecurityViolation):
+        indexer._check_security_shield("KeePassXC.exe", "Passwords.kdbx")
+
+    # 2. Blocked sensitive window titles
+    with pytest.raises(ScreenSecurityViolation):
+        indexer._check_security_shield("chrome.exe", "Enter Master Password")
+
+    with pytest.raises(ScreenSecurityViolation):
+        indexer._check_security_shield("firefox.exe", "Bank Login - Account Access")
+
+    # 3. Permitted normal applications
+    indexer._check_security_shield("code.exe", "Ikkhi - Visual Studio Code")
+    indexer._check_security_shield("blender.exe", "Blender Render Canvas")
+
+
+def test_indexed_screen_live_coordinates():
+    """Verify IndexedScreen coordinates and movement fallback."""
+    from ikkhi.vision.indexer import IndexedScreen
+
+    screen = IndexedScreen(
+        image_bytes=b"dummy",
+        mime_type="image/webp",
+        original_window_box=(100, 200, 500, 600),  # w=400, h=400
+        scaled_dimensions=(400, 400),
+        scale_factor_x=1.0,
+        scale_factor_y=1.0,
+        payload_kb=12.5,
+        estimated_tokens=258,
+        window_hwnd=0  # No live hwnd, uses fallback
+    )
+
+    x, y = screen.map_to_screen_coordinates(0.5, 0.5)
+    assert x == 300
+    assert y == 400
+    assert screen.payload_kb == 12.5
+    assert screen.estimated_tokens == 258
+

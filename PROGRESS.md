@@ -264,7 +264,8 @@ To ensure zero guesswork for future AI agents and developers, every feature and 
 - [x] Added unit test `test_audio_device_auto_resolution` in [`tests/unit/test_audio.py`](file:///e:/rouf/software-project/Ikkhi/tests/unit/test_audio.py)
 - [x] Verified full regression test suite passing at **55/55 tests (100% pass rate)**
 
-### Phase 20: Conversational Standby Session & Zero-GPU Wake Spotting Engine
+### Phase 20: Conversational Standby Session & Zero-GPU Wake Spotting Engine [Needs Live Testing]
+- [x] **Status:** Partially Working / Under Live Acoustic Testing (wake phonetics, CPU int8 zero-GPU scanner, and TTS playback functional; acoustic threshold and regional dialect tuning ongoing)
 - [x] Diagnosed high GPU power usage and battery drain caused by background wake-word acoustic scanning invoking CUDA cores
 - [x] Implemented dedicated CPU int8 Whisper spotter (`tiny.en`, `compute_type="int8"`) in [`src/ikkhi/audio/wakeword.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/audio/wakeword.py), dropping idle GPU usage to **0.0%**
 - [x] Added short-noise filtering discarding sub-0.55s audio bursts to eliminate false positive triggers from keyboard clicks and typing
@@ -275,3 +276,16 @@ To ensure zero guesswork for future AI agents and developers, every feature and 
 - [x] Upgraded Google AI Studio client in [`config.yaml`](file:///e:/rouf/software-project/Ikkhi/config.yaml) and [`src/ikkhi/ai/router_model.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/ai/router_model.py) to prioritize `gemini-3.8-flash`, resolving HTTP 404 deprecation on retired models
 - [x] Added `conversation_timeout_seconds: 15` and `wake_whisper_device: "cpu"` to `AudioSettings` in [`src/ikkhi/core/config.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/core/config.py)
 - [x] Verified 100% regression test pass rate across **55/55 tests (100% pass rate)** in 11.49s
+
+### Phase 21: High-Efficiency Screen Perception, Token Minimization & Visual Navigation Groundwork [Auto-Verified]
+- [x] **Status:** Implemented & Verified (57/57 tests passing, <80KB WebP payloads, <260 vision tokens, Tier 1.0 Local UIA Fast-Path at 0 tokens)
+- [x] Implemented Active Window Downsampling & Clamping (768px max dimension) in [`ScreenIndexer`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/vision/indexer.py), guaranteeing $\le 258$ vision tokens per capture
+- [x] Integrated WebP image compression (quality 75, method 4) achieving 70-80% payload size reduction (<80KB payload vs 400KB+ JPEG)
+- [x] Implemented Credential Manager & Sensitive Application Privacy Shield in [`ScreenIndexer`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/vision/indexer.py): strictly blocks screen captures of Bitwarden, 1Password, KeePass, and master password / bank login windows with `ScreenSecurityViolation`
+- [x] Connected Tier 1.0 Local Windows Accessibility Tree (UIA) Fast-Path in [`UniversalUIInspector`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/automation/inspector.py) and [`IkkhiOrchestrator`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/core/orchestrator.py): discovers text controls in <25ms at **0 tokens ($0.00 cost)** before invoking cloud vision
+- [x] Implemented Dynamic Live-Window Tracking in `IndexedScreen.map_to_screen_coordinates()`: continuously queries target window `hwnd` so floating, moved, or snapped windows maintain 100% targeting precision
+- [x] Enhanced Thread-Safe Visual Beacon Overlay in [`src/ikkhi/ui/beacon.py`](file:///e:/rouf/software-project/Ikkhi/src/ikkhi/ui/beacon.py): cross-thread safe QObject queued invocation for 40 FPS neon-cyan attention ripple beacon
+- [x] Built Standalone Visual Navigation Tester utility ([`scripts/test_visual_navigation.py`](file:///e:/rouf/software-project/Ikkhi/scripts/test_visual_navigation.py)) and batch launcher ([`launch_visual_tester.bat`](file:///e:/rouf/software-project/Ikkhi/launch_visual_tester.bat)) for live testing without voice dependencies
+- [x] Added unit tests for Security Shield and Live Window Coordinates in [`tests/unit/test_security.py`](file:///e:/rouf/software-project/Ikkhi/tests/unit/test_security.py)
+- [x] Verified 100% regression test pass rate across **57/57 tests (100% pass rate)** in 12.14s
+

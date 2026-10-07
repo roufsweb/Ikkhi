@@ -53,5 +53,7 @@ htmlcov/
 
 # Temporary and log artifacts
 *.log
+storage/
 scratch/
 tmp/
+

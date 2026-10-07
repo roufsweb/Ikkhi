@@ -6,9 +6,10 @@ to visually orient the user without stealing window focus.
 
 import math
 from typing import Optional
-from PyQt6.QtCore import Qt, QTimer, pyqtSlot
+from PyQt6.QtCore import Qt, QTimer, pyqtSlot, QThread, QMetaObject, Q_ARG, QObject
 from PyQt6.QtGui import QPainter, QColor, QPen, QBrush, QPaintEvent
 from PyQt6.QtWidgets import QWidget, QApplication
+
 
 
 class CursorTargetBeacon(QWidget):
@@ -128,21 +129,50 @@ class CursorTargetBeacon(QWidget):
 
 
 _ACTIVE_BEACONS = []
+_DISPATCHER: Optional["_BeaconDispatcher"] = None
+
+
+class _BeaconDispatcher(QObject):
+    """Queues beacon trigger events from worker threads onto the GUI thread."""
+
+    @pyqtSlot(int, int, float)
+    def dispatch_beacon(self, screen_x: int, screen_y: int, duration: float) -> None:
+        beacon = CursorTargetBeacon(size=84)
+        _ACTIVE_BEACONS.append(beacon)
+        beacon.destroyed.connect(lambda: _ACTIVE_BEACONS.remove(beacon) if beacon in _ACTIVE_BEACONS else None)
+        beacon.trigger_at(screen_x, screen_y, duration)
 
 
 def show_visual_beacon(screen_x: int, screen_y: int, duration: float = 1.5) -> Optional[CursorTargetBeacon]:
     """
     Convenience function to instantiate and trigger an on-screen target beacon.
-    Safe to invoke when a QApplication event loop is active.
+    Safe to invoke from both the main Qt GUI thread and background worker threads.
     """
     app = QApplication.instance()
     if app is None:
         return None
 
-    beacon = CursorTargetBeacon(size=84)
-    _ACTIVE_BEACONS.append(beacon)
+    # Check if we are running on the main Qt GUI thread
+    if QThread.currentThread() == app.thread():
+        beacon = CursorTargetBeacon(size=84)
+        _ACTIVE_BEACONS.append(beacon)
+        beacon.destroyed.connect(lambda: _ACTIVE_BEACONS.remove(beacon) if beacon in _ACTIVE_BEACONS else None)
+        beacon.trigger_at(screen_x, screen_y, duration)
+        return beacon
 
-    # Clean up reference when closed
-    beacon.destroyed.connect(lambda: _ACTIVE_BEACONS.remove(beacon) if beacon in _ACTIVE_BEACONS else None)
-    beacon.trigger_at(screen_x, screen_y, duration)
-    return beacon
+    # Cross-thread safe invocation via queued slot
+    global _DISPATCHER
+    if _DISPATCHER is None:
+        _DISPATCHER = _BeaconDispatcher()
+        _DISPATCHER.moveToThread(app.thread())
+
+    QMetaObject.invokeMethod(
+        _DISPATCHER,
+        "dispatch_beacon",
+        Qt.ConnectionType.QueuedConnection,
+        Q_ARG(int, screen_x),
+        Q_ARG(int, screen_y),
+        Q_ARG(float, duration)
+    )
+    return None
+
