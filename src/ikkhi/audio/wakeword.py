@@ -29,6 +29,7 @@ class WakeWordListener:
     # Extended phonetic variations and common assistant triggers for natural invocation
     WAKE_KEYWORDS = [
         "hey ikkhi", "hey ikki", "hey eki", "hey iki", "hey ikhi", "hey ikky", "ikky",
+        "hey chi", "chi", "hey chee", "chee", "hey chiki", "chiki", "hey khi", "khi",
         "hey iggy", "hey itchy", "hey cookie", "hey key", "hey, ikkhi", "hey, ikki",
         "hey k", "hey, k", "hey kay", "hey, kay", "hey kiki", "kiki", "hey keke",
         "hey ike", "hey aki", "hey akiya", "hey acute", "hey ok", "hey i key", "hey a key",
@@ -221,22 +222,36 @@ class WakeWordListener:
                                 logger.info("Acoustic listener heard: '%s'", clean)
 
                             # Check against all phonetic variations of wake triggers
-                            clean_norm = re.sub(r"[^\w\s]", " ", clean)
-                            clean_norm = " ".join(clean_norm.split())
+                            clean_norm = " ".join(re.sub(r"[^\w\s]", " ", clean).split())
+
+                            # 1. Regex prefix check for "hey/hi/hello <name>"
+                            prefix_match = re.search(
+                                r"\b(hey|hi|hello)\s+(ikkhi|ikki|ikhi|eki|iki|ikky|chi|chee|chiki|k|kay|kiki|keke|key|ki|khi|iggy|itchy|cookie|assistant|siri|google|jarvis)\b",
+                                clean_norm
+                            )
 
                             matched_kw = None
-                            for kw in self.WAKE_KEYWORDS:
-                                kw_norm = " ".join(re.sub(r"[^\w\s]", " ", kw).split())
-                                pattern = r"\b" + re.escape(kw_norm) + r"\b"
-                                if re.search(pattern, clean_norm) or kw in clean:
-                                    matched_kw = kw
-                                    break
+                            if prefix_match:
+                                matched_kw = prefix_match.group(0)
+                            else:
+                                for kw in self.WAKE_KEYWORDS:
+                                    kw_norm = " ".join(re.sub(r"[^\w\s]", " ", kw).split())
+                                    pattern = r"\b" + re.escape(kw_norm) + r"\b"
+                                    if re.search(pattern, clean_norm) or kw in clean:
+                                        matched_kw = kw
+                                        break
 
                             if matched_kw:
                                 logger.info(">>> [WAKE-WORD MATCHED!] Trigger: '%s' in: '%s' <<<", matched_kw, clean)
                                 cooldown_until = now + 2.0
                                 # Extract remainder command if uttered in same sentence
-                                remainder = clean.split(matched_kw, 1)[-1].strip(" ,.!?")
+                                remainder = ""
+                                if matched_kw in clean:
+                                    remainder = clean.split(matched_kw, 1)[-1].strip(" ,.!?")
+                                else:
+                                    parts = clean_norm.split(matched_kw, 1)
+                                    if len(parts) > 1:
+                                        remainder = parts[1].strip(" ,.!?")
                                 self.on_wake(matched_kw, remainder if remainder else None)
                         except Exception as exc:
                             logger.debug("Wake verification transcribe error: %s", exc)

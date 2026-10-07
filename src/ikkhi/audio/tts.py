@@ -29,6 +29,7 @@ class LocalSpeechEngine:
         self.settings = settings
         self._queue: queue.Queue[str] = queue.Queue()
         self._thread: Optional[threading.Thread] = None
+        self._lock = threading.Lock()
         self._running = False
         self._init_worker()
 
@@ -73,14 +74,15 @@ class LocalSpeechEngine:
         if not clean_text:
             return
 
-        # Attempt Neural voice if configured
-        if getattr(self.settings, "tts_engine", "neural") == "neural":
-            if self._synthesize_neural(clean_text):
-                return
-            logger.info("Neural TTS failed or offline; falling back to offline SAPI voice.")
+        with self._lock:
+            # Attempt Neural voice if configured
+            if getattr(self.settings, "tts_engine", "neural") == "neural":
+                if self._synthesize_neural(clean_text):
+                    return
+                logger.info("Neural TTS failed or offline; falling back to offline SAPI voice.")
 
-        # Fallback to local SAPI voice
-        self._synthesize_sapi(clean_text)
+            # Fallback to local SAPI voice
+            self._synthesize_sapi(clean_text)
 
     def _synthesize_neural(self, text: str) -> bool:
         """Synthesize natural neural voice using edge-tts streamed directly to sounddevice."""

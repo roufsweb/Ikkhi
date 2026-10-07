@@ -142,7 +142,6 @@ def run_live_test():
             logger.info("Executing initial intent: \"%s\"", initial_cmd)
             res = orchestrator.process_transcript(initial_cmd)
             logger.info(">>> Response: %s", res)
-            orchestrator.speech_engine.speak(res, wait=True)
         else:
             orchestrator.speech_engine.speak("I'm listening, go ahead.", wait=True)
 
@@ -178,7 +177,6 @@ def run_live_test():
             # Execute user action / Gemini query and speak reply
             res = orchestrator.process_transcript(clean)
             logger.info(">>> Assistant: %s", res)
-            orchestrator.speech_engine.speak(res, wait=True)
 
         with session_lock:
             is_session_active = False
